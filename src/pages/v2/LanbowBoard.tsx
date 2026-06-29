@@ -65,7 +65,11 @@ const KpiCell = ({ k }: { k: Kpi }) => {
     <div style={{ flex: 1, minWidth: 108, padding: '4px 16px 4px 13px', borderLeft: `2px solid ${col}` }}>
       <div style={{ fontSize: 9.5, color: c.textLabel, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 8 }}>{k.l}</div>
       <div style={{ fontFamily: c.mono, fontSize: 24, fontWeight: 600, lineHeight: 1, color: vcol }}>{k.v}</div>
-      {k.d && <div style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontFamily: c.mono, fontSize: 10, fontWeight: 600, marginTop: 8, padding: '2px 7px', borderRadius: R.chip, color: k.dcls === 'up' ? c.green : k.dcls === 'down' ? CRIT : c.textSec, background: k.dcls === 'up' ? 'rgba(0,204,119,.12)' : k.dcls === 'down' ? 'rgba(255,68,102,.12)' : c.bgInput }}>{k.d}</div>}
+      {k.d && (() => {
+        const num = k.d.replace(/^[▲▼]\s*/, '');                 // strip any arrow from data
+        const arrow = k.dcls === 'up' ? '▲' : k.dcls === 'down' ? '▼' : '';  // arrow follows color
+        return <div style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontFamily: c.mono, fontSize: 10, fontWeight: 600, marginTop: 8, padding: '2px 7px', borderRadius: R.chip, color: k.dcls === 'up' ? c.green : k.dcls === 'down' ? CRIT : c.textSec, background: k.dcls === 'up' ? 'rgba(0,204,119,.12)' : k.dcls === 'down' ? 'rgba(255,68,102,.12)' : c.bgInput }}>{arrow && <span>{arrow}</span>}{num}</div>;
+      })()}
     </div>
   );
 };
