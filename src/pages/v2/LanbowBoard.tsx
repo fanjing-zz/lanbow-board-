@@ -4,6 +4,7 @@ import {
   PRODUCTS, TENANTS, NAV, ASSET_HEALTH, SUGGESTIONS, anomalies, DATA_LINK,
   Product, Kpi, FunnelNode,
 } from './boardData';
+import { downloadDramaReport } from './reportTemplate';
 
 const WARN = '#FFB800', CRIT = '#FF4466';
 
@@ -133,9 +134,17 @@ export function LanbowBoard() {
   const [input, setInput] = React.useState('');
   const [mods, setMods] = React.useState<Mod[]>([]);
   const [chatOpen, setChatOpen] = React.useState(false);
+  const [narrow, setNarrow] = React.useState(false);
+  const [filtersOpen, setFiltersOpen] = React.useState(false);
   const idRef = React.useRef(0);
 
   React.useEffect(() => { applyTheme(isDark); }, [isDark]);
+  React.useEffect(() => {
+    const mq = window.matchMedia('(max-width: 1080px)');
+    const on = () => setNarrow(mq.matches);
+    on(); mq.addEventListener('change', on);
+    return () => mq.removeEventListener('change', on);
+  }, []);
 
   const products = PRODUCTS.filter(p => p.tenant === tenant);
   const product = PRODUCTS.find(p => p.id === prodId) || PRODUCTS[0];
@@ -162,6 +171,18 @@ export function LanbowBoard() {
   };
 
   const onTenant = (id: string) => { setTenant(id); const first = PRODUCTS.find(p => p.tenant === id); if (first) setProdId(first.id); };
+
+  // filter controls (reused inline on wide screens, stacked in a dropdown on narrow)
+  const tenantSel = (full?: boolean) => <select value={tenant} onChange={e => onTenant(e.target.value)} style={{ ...selStyle, ...(full ? { width: '100%', maxWidth: 'none' } : {}) }}>{TENANTS.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}</select>;
+  const prodSel = (full?: boolean) => <select value={prodId} onChange={e => setProdId(e.target.value)} style={{ ...selStyle, ...(full ? { width: '100%', maxWidth: 'none' } : {}) }}>{products.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}</select>;
+  const windowChip = <span style={{ ...selStyle, fontWeight: 600 }}>单日 · 2026-06-23</span>;
+  const acctChip = <span style={{ fontFamily: c.mono, fontSize: 11, fontWeight: 600, color: c.textPri, background: c.bgInput, border: `1px solid ${c.border}`, borderRadius: R.ctrl, padding: '3px 9px', whiteSpace: 'nowrap' }}>{product.accts || 0} / {product.tz || 'GMT'}</span>;
+  const FILTERS: Array<[string, React.ReactNode, React.ReactNode]> = [
+    ['租户', tenantSel(), tenantSel(true)],
+    ['产品', prodSel(), prodSel(true)],
+    ['窗口', windowChip, windowChip],
+    ['账号', acctChip, acctChip],
+  ];
 
   const modChips = mods.length > 0 ? (
     <div className="lb-pane" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginBottom: 8 }}>
@@ -250,16 +271,31 @@ export function LanbowBoard() {
       {/* ── Topbar ── */}
       <header style={{ gridColumn: '1 / 3', gridRow: 1, background: 'transparent', display: 'flex', alignItems: 'center', padding: '0 22px', gap: 14, zIndex: 20 }}>
         <img src={isDark ? '/lanbow-logo-light.png' : '/lanbow-logo-dark.png'} alt="LANBOW" style={{ height: 16, width: 'auto', display: 'block', flexShrink: 0 }} />
-        <span style={{ fontFamily: c.sans, fontSize: 10.5, color: c.textSec, letterSpacing: '0.05em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0, flexShrink: 1 }}>Growth Decision System · v1.2</span>
+        {!narrow && <span style={{ fontFamily: c.sans, fontSize: 10.5, color: c.textSec, letterSpacing: '0.05em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0, flexShrink: 1 }}>Growth Decision System · v1.2</span>}
         <div style={{ flex: 1, minWidth: 8 }} />
-        <div style={fltGroup}><span style={fltL}>租户</span>
-          <select value={tenant} onChange={e => onTenant(e.target.value)} style={selStyle}>{TENANTS.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}</select></div>
-        <div style={fltGroup}><span style={fltL}>产品</span>
-          <select value={prodId} onChange={e => setProdId(e.target.value)} style={selStyle}>{products.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}</select></div>
-        <div style={fltGroup}><span style={fltL}>窗口</span>
-          <span style={{ ...selStyle, fontWeight: 600 }}>单日 · 2026-06-23</span></div>
-        <div style={fltGroup}><span style={fltL}>账号</span>
-          <span style={{ fontFamily: c.mono, fontSize: 11, fontWeight: 600, color: c.textPri, background: c.bgInput, border: `1px solid ${c.border}`, borderRadius: R.ctrl, padding: '3px 9px', whiteSpace: 'nowrap' }}>{product.accts || 0} / {product.tz || 'GMT'}</span></div>
+
+        {narrow ? (
+          <div style={{ position: 'relative', flexShrink: 0 }}>
+            <button className="lb-ico" onClick={() => setFiltersOpen(o => !o)} title="筛选" style={{ display: 'flex', alignItems: 'center', gap: 7, height: 30, padding: '0 10px', borderRadius: R.ctrl, border: `1px solid ${c.border}`, background: c.bgInput, color: c.textSec, cursor: 'pointer' }}>
+              {I({ size: 15 }, <><line x1="4" y1="6" x2="20" y2="6" /><line x1="4" y1="12" x2="20" y2="12" /><line x1="4" y1="18" x2="20" y2="18" /><circle cx="9" cy="6" r="2" fill="currentColor" stroke="none" /><circle cx="15" cy="12" r="2" fill="currentColor" stroke="none" /><circle cx="8" cy="18" r="2" fill="currentColor" stroke="none" /></>)}
+              <span style={{ fontFamily: c.mono, fontSize: 11, fontWeight: 600, color: c.textPri, maxWidth: 90, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{product.label}</span>
+            </button>
+            {filtersOpen && <>
+              <div onClick={() => setFiltersOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 49 }} />
+              <div className="lb-pane" style={{ position: 'absolute', top: 38, right: 0, zIndex: 50, width: 256, padding: 14, borderRadius: R.ctrl, background: c.bgElevated, border: `1px solid ${c.borderStrong}`, boxShadow: `0 12px 40px ${c.shadowColor}`, backdropFilter: 'blur(20px)', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {FILTERS.map(([label, , full]) => (
+                  <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                    <span style={fltL}>{label}</span>
+                    {full}
+                  </div>
+                ))}
+              </div>
+            </>}
+          </div>
+        ) : FILTERS.map(([label, inline]) => (
+          <div key={label} style={fltGroup}><span style={fltL}>{label}</span>{inline}</div>
+        ))}
+
         <div style={{ display: 'flex', flexShrink: 0, background: c.bgInput, border: `1px solid ${c.border}`, borderRadius: R.nav, padding: 2 }}>
           <button style={segBtn(view === 'internal')} onClick={() => setView('internal')}>内部</button>
           <button style={segBtn(view === 'external')} onClick={() => setView('external')}>对外</button>
@@ -426,7 +462,14 @@ function Pane({ cur, product, view, msgs }: { cur: string; product: Product; vie
   );
   if (cur === 'reports') {
     const ano = anomalies(product);
-    return (<><PaneHeader zh="报告" en="Reports" sub={`${product.label} · 日报（envelope → project-report）`} />
+    return (<><PaneHeader zh="报告" en="Reports" sub={`${product.label} · 日报 / 周报（envelope → project-report）`} />
+      <div style={{ marginBottom: 14 }}>
+        <button className="lb-btn" onClick={() => downloadDramaReport()} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '9px 16px', borderRadius: R.ctrl, border: `1px solid ${c.borderStrong}`, background: c.accentDim, color: c.accent, cursor: 'pointer', fontFamily: c.sans, fontSize: 12.5, fontWeight: 600 }}>
+          {I({ size: 15 }, <><path d="M12 3v12" /><path d="m7 11 5 4 5-4" /><path d="M5 21h14" /></>)}
+          下载投放复盘报告 · W20
+          <span style={{ fontFamily: c.sans, fontSize: 10, color: c.textMute, fontWeight: 400 }}>.html · 跟随当前主题</span>
+        </button>
+      </div>
       <Card title={`${product.label} 日报 · 2026-06-23`} src="project-report">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14, fontSize: 12.5, color: c.textSec, lineHeight: 1.7 }}>
           <div><b style={{ color: c.textPri }}>大盘</b><div style={{ marginTop: 4 }}>{product.kpis.slice(0, 4).map(k => `${k.l} ${k.v}`).join(' · ')}</div></div>
