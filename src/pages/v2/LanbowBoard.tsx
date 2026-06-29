@@ -6,6 +6,7 @@ import {
 } from './boardData';
 import { downloadDramaReport } from './reportTemplate';
 import { compactModule, TrendCard, ChannelMix, CompletionRing } from './boardModules';
+import { MathLoader, LoaderOverlay } from './MathLoader';
 
 const WARN = '#FFB800', CRIT = '#FF4466';
 
@@ -151,9 +152,19 @@ export function LanbowBoard() {
   const [narrow, setNarrow] = React.useState(false);
   const [filtersOpen, setFiltersOpen] = React.useState(false);
   const [customBoard, setCustomBoard] = React.useState<string[]>([]); // labels pinned into a custom overview
+  const [thinking, setThinking] = React.useState(false);  // agent composing reply
+  const [loadingData, setLoadingData] = React.useState(false); // data "fetching" on filter switch
   const idRef = React.useRef(0);
 
   React.useEffect(() => { applyTheme(isDark); }, [isDark]);
+  // brief data-load on tenant/product switch (global loading state)
+  const firstRun = React.useRef(true);
+  React.useEffect(() => {
+    if (firstRun.current) { firstRun.current = false; return; }
+    setLoadingData(true);
+    const t = window.setTimeout(() => setLoadingData(false), 620);
+    return () => window.clearTimeout(t);
+  }, [prodId, tenant]);
   React.useEffect(() => {
     const mq = window.matchMedia('(max-width: 1080px)');
     const on = () => setNarrow(mq.matches);
@@ -182,7 +193,9 @@ export function LanbowBoard() {
     setMsgs(m => [...m, { id: uid, role: 'user', text: q, mods: attached.length ? attached : undefined }]);
     setMods([]);
     setChatOpen(true);
+    setThinking(true);
     window.setTimeout(() => {
+      setThinking(false);
       let reply: Msg;
       const aid = ++idRef.current;
       if (isComposeIntent(q) || (attached.length >= 2 && /合成|看板|总览|组合/.test(q))) {
@@ -264,7 +277,7 @@ export function LanbowBoard() {
     return (
       <div style={{ marginTop: 10, maxWidth: 380 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {w.labels.map(l => dataChip(l, compactModule(l, product), ['追问', '钉到看板']))}
+          {w.labels.map(l => <React.Fragment key={l}>{dataChip(l, compactModule(l, product), ['追问', '钉到看板'])}</React.Fragment>)}
         </div>
         <button className="lb-btn" onClick={() => applyCustom(w.labels)} style={{ marginTop: 10, display: 'inline-flex', alignItems: 'center', gap: 7, padding: '8px 14px', borderRadius: R.ctrl, border: 'none', background: c.accent, color: c.bgBase, cursor: 'pointer', fontFamily: c.sans, fontSize: 12, fontWeight: 600 }}>
           {I({ size: 14 }, <><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /></>)}
@@ -373,6 +386,8 @@ export function LanbowBoard() {
         <div className="lb-pane" key={`${cur}-${prodId}`}><Pane cur={cur} product={product} view={view} msgs={msgs} customBoard={customBoard} onClearCustom={() => setCustomBoard([])} /></div>
       </main>
 
+      {loadingData && <LoaderOverlay label="加载数据…" />}
+
       {/* ── Centered input bar (entry point, when companion panel is closed) ── */}
       {!chatOpen && <>
         <div style={{ position: 'fixed', left: 60, right: 0, bottom: 0, height: 170, zIndex: 30, pointerEvents: 'none',
@@ -405,6 +420,12 @@ export function LanbowBoard() {
           <div className="lb-main" style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '8px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
             {msgs.length === 0 && <div style={{ color: c.textMute, fontSize: 12, lineHeight: 1.7, paddingTop: 6 }}>点击任意模块右上角的 ⊕ 加入 AI 上下文，再在下方提问；或直接输入问题。</div>}
             {msgs.map(bubble)}
+            {thinking && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: c.textMute }}>
+                <MathLoader size={30} />
+                <span style={{ fontFamily: c.mono, fontSize: 11, letterSpacing: '0.06em' }}>Lanbow 正在思考…</span>
+              </div>
+            )}
           </div>
           {/* suggested follow-ups */}
           <div style={{ padding: '6px 18px 0' }}>
