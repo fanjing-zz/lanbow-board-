@@ -54,7 +54,7 @@ export const NAV: NavItem[] = [
 export const ASSET_HEALTH = ['APP 商品', '广告账户', '素材审核', '落地域名', 'PIXEL/CAPI', '支付', '归因'];
 
 // chat suggestion chips (per the board)
-export const SUGGESTIONS = ['创建产品', '哪个计划要关停？', '付费转化卡在哪一步？', '各国家花费分布？', '今天大盘怎么样？', '数据健康吗？'];
+export const SUGGESTIONS = ['生成自定义看板', '今天大盘怎么样？', '付费转化卡在哪一步？', '各国家花费分布？', '哪个计划要关停？', '数据健康吗？'];
 
 // ── DRAMA (real, near-zero day) ──
 const drama: Product = {

@@ -5,6 +5,7 @@ import {
   Product, Kpi, FunnelNode,
 } from './boardData';
 import { downloadDramaReport } from './reportTemplate';
+import { compactModule, TrendCard, ChannelMix, CompletionRing } from './boardModules';
 
 const WARN = '#FFB800', CRIT = '#FF4466';
 
@@ -124,8 +125,17 @@ function boardReply(q: string, p: Product, mods: string[] = []): string {
   return wrap(`已记录「${q.trim()}」。我会基于 ${p.label} 的 envelope 数据给出分析（示例）。`);
 }
 
-type Msg = { id: number; role: 'user' | 'agent'; text: string; mods?: string[] };
+type Widget = { kind: 'compose'; labels: string[] } | { kind: 'data'; topic: string };
+type Msg = { id: number; role: 'user' | 'agent'; text: string; mods?: string[]; widget?: Widget };
 interface Mod { id: string; label: string }
+
+const isComposeIntent = (q: string) => /(生成|合成|组合|做一?个|搭).*(看板|总览|面板|dashboard|board)|自定义看板|自定义总览|custom\s*(board|dashboard)/i.test(q);
+const dataTopic = (q: string): string | null =>
+  /大盘|kpi|花费|roas|今天|今日/i.test(q) ? '今日大盘 KPI'
+  : /国家|地区|花费分布/.test(q) ? '国家 / 地区分布'
+  : /漏斗|链路|卡在|转化|付费/.test(q) ? '核心链路流失'
+  : /剧目|内容/.test(q) ? '剧目 / 内容'
+  : null;
 
 export function LanbowBoard() {
   const [isDark, setIsDark] = React.useState(true);
@@ -140,6 +150,7 @@ export function LanbowBoard() {
   const [chatOpen, setChatOpen] = React.useState(false);
   const [narrow, setNarrow] = React.useState(false);
   const [filtersOpen, setFiltersOpen] = React.useState(false);
+  const [customBoard, setCustomBoard] = React.useState<string[]>([]); // labels pinned into a custom overview
   const idRef = React.useRef(0);
 
   React.useEffect(() => { applyTheme(isDark); }, [isDark]);
@@ -171,8 +182,22 @@ export function LanbowBoard() {
     setMsgs(m => [...m, { id: uid, role: 'user', text: q, mods: attached.length ? attached : undefined }]);
     setMods([]);
     setChatOpen(true);
-    window.setTimeout(() => setMsgs(m => [...m, { id: ++idRef.current, role: 'agent', text: boardReply(q, product, attached) }]), 650);
+    window.setTimeout(() => {
+      let reply: Msg;
+      const aid = ++idRef.current;
+      if (isComposeIntent(q) || (attached.length >= 2 && /合成|看板|总览|组合/.test(q))) {
+        reply = attached.length
+          ? { id: aid, role: 'agent', text: `已为你合成自定义总览，含 ${attached.length} 个模块。可「应用为总览」固定到看板，或对任一模块继续追问。`, widget: { kind: 'compose', labels: attached } }
+          : { id: aid, role: 'agent', text: '请先点任意模块右上角的 ⊕ 选择要纳入的模块，再说「生成自定义看板」。' };
+      } else {
+        const topic = dataTopic(q);
+        reply = { id: aid, role: 'agent', text: boardReply(q, product, attached), widget: topic ? { kind: 'data', topic } : undefined };
+      }
+      setMsgs(m => [...m, reply]);
+    }, 650);
   };
+
+  const applyCustom = (labels: string[]) => { setCustomBoard(labels); setCur('overview'); setChatOpen(false); };
 
   const onTenant = (id: string) => { setTenant(id); const first = PRODUCTS.find(p => p.tenant === id); if (first) setProdId(first.id); };
 
@@ -219,13 +244,46 @@ export function LanbowBoard() {
     </div>
   );
 
+  // a small data sub-card (used inside agent replies — interactive: ⊕ context + 追问)
+  const dataChip = (label: string, body: React.ReactNode, follow: string[]) => (
+    <div style={{ background: c.bgCard, border: `1px solid ${c.border}`, borderRadius: R.card, overflow: 'hidden' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderBottom: `1px solid ${c.border}` }}>
+        <span style={{ fontFamily: c.sans, fontSize: 11.5, fontWeight: 600, color: c.textPri }}>{label}</span>
+        <button className="lb-modbtn" onClick={() => modCtx.toggle(`mod-${label}`, label)} title="加入 AI 上下文" style={{ width: 18, height: 18, borderRadius: R.badge, border: `1px solid ${c.border}`, background: 'transparent', color: c.textMute, cursor: 'pointer', fontSize: 12, lineHeight: 1 }}>⊕</button>
+      </div>
+      <div style={{ padding: 12 }}>{body}</div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, padding: '0 12px 12px' }}>
+        {follow.map(f => <button key={f} className="lb-chip" onClick={() => send(`${f}「${label}」`)} style={{ fontFamily: c.sans, fontSize: 10.5, padding: '3px 9px', borderRadius: R.pill, border: `1px solid ${c.border}`, background: 'transparent', color: c.textSec, cursor: 'pointer' }}>{f}</button>)}
+      </div>
+    </div>
+  );
+
+  const widgetView = (w: Widget) => {
+    if (w.kind === 'data') return <div style={{ marginTop: 8, maxWidth: 360 }}>{dataChip(w.topic, compactModule(w.topic, product), ['对比', '为什么', '怎么优化'])}</div>;
+    // compose → custom board preview
+    return (
+      <div style={{ marginTop: 10, maxWidth: 380 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {w.labels.map(l => dataChip(l, compactModule(l, product), ['追问', '钉到看板']))}
+        </div>
+        <button className="lb-btn" onClick={() => applyCustom(w.labels)} style={{ marginTop: 10, display: 'inline-flex', alignItems: 'center', gap: 7, padding: '8px 14px', borderRadius: R.ctrl, border: 'none', background: c.accent, color: c.bgBase, cursor: 'pointer', fontFamily: c.sans, fontSize: 12, fontWeight: 600 }}>
+          {I({ size: 14 }, <><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /></>)}
+          应用为自定义总览
+        </button>
+      </div>
+    );
+  };
+
   const bubble = (m: Msg) => m.role === 'user' ? (
     <div key={m.id} style={{ alignSelf: 'flex-end', maxWidth: '90%', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 5 }}>
       {m.mods && m.mods.length > 0 && <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, justifyContent: 'flex-end' }}>{m.mods.map(t => <span key={t} style={{ fontFamily: c.sans, fontSize: 10, color: c.accent, background: c.accentDim, border: `1px solid ${c.borderStrong}`, borderRadius: R.badge, padding: '2px 7px' }}>{t}</span>)}</div>}
       {m.text && <div style={{ background: c.bgCard, border: `1px solid ${c.border}`, borderRadius: '12px 12px 4px 12px', padding: '9px 13px', fontFamily: c.sans, fontSize: 12.5, color: c.textPri }}>{m.text}</div>}
     </div>
   ) : (
-    <div key={m.id} style={{ alignSelf: 'flex-start', maxWidth: '92%', borderLeft: `3px solid ${c.accent}`, paddingLeft: 11, color: c.textSec, fontSize: 12.5, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{m.text}</div>
+    <div key={m.id} style={{ alignSelf: 'flex-start', maxWidth: '100%' }}>
+      <div style={{ borderLeft: `3px solid ${c.accent}`, paddingLeft: 11, color: c.textSec, fontSize: 12.5, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{m.text}</div>
+      {m.widget && widgetView(m.widget)}
+    </div>
   );
 
   return (
@@ -312,7 +370,7 @@ export function LanbowBoard() {
 
       {/* ── Main ── */}
       <main className="lb-main" style={{ gridColumn: 2, gridRow: 2, overflowY: 'auto', padding: '22px 26px 150px' }}>
-        <div className="lb-pane" key={`${cur}-${prodId}`}><Pane cur={cur} product={product} view={view} msgs={msgs} /></div>
+        <div className="lb-pane" key={`${cur}-${prodId}`}><Pane cur={cur} product={product} view={view} msgs={msgs} customBoard={customBoard} onClearCustom={() => setCustomBoard([])} /></div>
       </main>
 
       {/* ── Centered input bar (entry point, when companion panel is closed) ── */}
@@ -390,7 +448,7 @@ const Placeholder = ({ zh, en, note }: { zh: string; en: string; note: string })
   <><PaneHeader zh={zh} en={en} /><Card title={`${zh}（AI 待生成）`}><div style={{ color: c.textMute, fontSize: 12, padding: '24px 4px', lineHeight: 1.8 }}>{note}</div></Card></>
 );
 
-function Pane({ cur, product, view, msgs }: { cur: string; product: Product; view: 'internal' | 'external'; msgs: Msg[] }) {
+function Pane({ cur, product, view, msgs, customBoard, onClearCustom }: { cur: string; product: Product; view: 'internal' | 'external'; msgs: Msg[]; customBoard: string[]; onClearCustom: () => void }) {
   if (cur === 'overview') {
     const ano = anomalies(product);
     return (
@@ -401,6 +459,24 @@ function Pane({ cur, product, view, msgs }: { cur: string; product: Product; vie
           <span style={{ fontFamily: c.mono, fontSize: 10, color: c.textLabel, alignSelf: 'center', textTransform: 'uppercase' }}>资产健康度</span>
           {ASSET_HEALTH.map(a => <span key={a} style={{ fontFamily: c.mono, fontSize: 10, padding: '3px 9px', borderRadius: R.chip, background: c.accentDim, color: c.accent, border: `1px solid ${c.borderStrong}` }}>● {a}</span>)}
         </div>
+
+        {/* custom board (composed via chat) */}
+        {customBoard.length > 0 && (
+          <div style={{ marginBottom: 16, border: `1px solid ${c.borderStrong}`, borderRadius: R.card, overflow: 'hidden', background: `radial-gradient(600px 240px at 92% -20%, ${c.accentDim}, transparent 60%), ${c.bgCard}` }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: `1px solid ${c.border}` }}>
+              <span style={{ fontWeight: 600, fontSize: 13, color: c.textPri }}>自定义总览 <span style={{ fontFamily: c.mono, fontSize: 10, color: c.textMute }}>· {customBoard.length} 模块 · 由对话生成</span></span>
+              <button className="lb-btn" onClick={onClearCustom} style={{ fontFamily: c.sans, fontSize: 11, color: c.textMute, background: 'transparent', border: `1px solid ${c.border}`, borderRadius: R.badge, padding: '3px 10px', cursor: 'pointer' }}>清除</button>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: customBoard.length === 1 ? '1fr' : '1fr 1fr', gap: 14, padding: 16 }}>
+              {customBoard.map((l, i) => (
+                <div key={i} style={{ background: c.bgPanel, border: `1px solid ${c.border}`, borderRadius: R.card, padding: 14 }}>
+                  <div style={{ fontFamily: c.sans, fontSize: 12, fontWeight: 600, color: c.textPri, marginBottom: 10 }}>{l}</div>
+                  {compactModule(l, product)}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
           <Card title="今日大盘 KPI" src={product.kpiSrc} span={2}><div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>{product.kpis.map((k, i) => <KpiCell key={i} k={k} />)}</div></Card>
           <Card title={`核心链路流失 · ${product.funnel.length} 节点`} src="广告→落地→注册→首集→付费"><Funnel nodes={product.funnel} /></Card>
@@ -421,6 +497,12 @@ function Pane({ cur, product, view, msgs }: { cur: string; product: Product; vie
           </Card>
           <Card title="国家 / 地区分布" src="cf_stream ⋈ roi"><GeoCard product={product} /></Card>
           <Card title="剧目 / 内容 Top" src="content"><SeriesTable product={product} /></Card>
+        </div>
+        {/* extended module styles */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14, marginTop: 14 }}>
+          <Card title="趋势 · Trend" src="series"><TrendCard p={product} /></Card>
+          <Card title="构成 · Mix" src="channels"><ChannelMix /></Card>
+          <Card title="完成度 · Goal" src="roas target"><CompletionRing p={product} /></Card>
         </div>
       </>
     );
