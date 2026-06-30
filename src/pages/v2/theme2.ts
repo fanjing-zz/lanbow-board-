@@ -139,3 +139,6 @@ export const c = {
   mono: "'Inter',system-ui,sans-serif",
   sans: "'Inter',system-ui,sans-serif",
 };
+
+// ── radius scale (single source) — strict to Figma 3097-11961 (sharp/technical) ──
+export const R = { card: 2, nav: 4, ctrl: 6, chip: 4, badge: 4, bar: 3, pill: 6 };

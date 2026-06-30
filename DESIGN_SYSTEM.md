@@ -13,6 +13,7 @@
 4. **Data‑driven.** Every view renders from the active `tenant → product` dataset. Switching is reactive; empty/placeholder states are explicit (`AI 待生成`, `起点`, `暂无数据`).
 5. **Conversation is ambient.** The AI assistant is a global companion that overlays content, can be fed any module as context, and is reachable from every page.
 6. **Restraint in weight & motion.** Semibold (600) max — no heavy 700. Motion is short (.12–.3s), functional, easing `cubic-bezier(.2,.7,.2,1)`.
+7. **Adaptive, not fixed.** Overlay/floating surfaces size with `clamp()` / `min(max())` — a **floor** so they never collapse on narrow screens, a **cap** so they don't sprawl on large ones, and a `vw` term to flex between. Fades & decorative zones use **`%` (width‑proportional)**, never fixed px, so transitions scale with the surface (see §3.2, §4.9).
 
 ---
 
@@ -76,7 +77,7 @@ Status badge palette (table cells): `ACTIVE` teal, `RECOVERY` red, `PAUSED` mute
 
 ### 2.4 Radius scale
 
-Single source `R` (in `LanbowBoard.tsx`). Strict to Figma — **sharp**.
+Single source `R` (exported from `theme2.ts`, imported wherever radii are needed). Strict to Figma — **sharp**. Never hardcode a radius literal — reference `R.*` (use a template like `` `0 ${R.bar}px ${R.bar}px 0` `` for compound values).
 
 | Token | px | Use |
 |---|---|---|
@@ -138,10 +139,11 @@ grid-template-rows:    56px 1fr;
 ### 3.2 Gradients & masks (layer separation)
 
 - **Bottom content fade** (when centered input shown): fixed strip, `linear-gradient(to top, bgBase 0%, bgBase 40%, transparent)` so content dissolves before the input.
-- **AI Companion blend** (overlay): the panel does **not** push content; it overlays and blends via a **right‑to‑left gradient + mask**:
-  - `background: linear-gradient(to right, transparent 0px, bgPanel 150px)` + radial accent glow
-  - `mask-image: linear-gradient(to right, transparent 0px, #000 130px)` (fades the frosted blur too)
-  - content offset `padding-left: 150` so it sits past the fade zone.
+- **AI Companion blend** (overlay): the panel does **not** push content; it overlays and blends via a **right‑to‑left fade**. The fade must be **width‑proportional**, not fixed‑px, so it scales naturally across screens (rule below):
+  - background = solid `bgPanel` + radial accent glow (`radial-gradient(700px 440px at 96% -8%, accentDim, transparent 60%)`). **Do not** stack a second horizontal `linear-gradient` here — one fade ramp only (the mask), never two multiplying.
+  - `mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,.16) 12%, rgba(0,0,0,.72) 24%, #000 33%)` — a 4‑stop **ease‑in** in **%** (fades the frosted blur with the color). Because stops are `%`, the fade widens on large screens and stays gentle on small.
+  - content offset `padding-left: clamp(150px, 15vw, 226px)` so text always lands in the opaque zone (tracks the fade).
+  - **Why mask‑% over fixed‑px:** fixed px (old `150px`/`130px`) looked too narrow/abrupt on wide screens and read as a hard edge in light mode; a single proportional ease‑in blends smoothly in both themes.
 
 ---
 
@@ -165,6 +167,19 @@ Left 2px accent border (`borderStrong`, or `CRIT`/`GREEN`/`WARN` by state). Labe
 ### 4.5 Funnel
 Rows: **left‑aligned** label (`step + label`, `·proxy`/`·missing` muted) → log‑scale bar (`width = 8 + 92·(log10(v)-min)/range`, `R.bar`, `.lb-bar` animated) → drop % (`起点` for first, `±x%`, red when `abn` or ≤ −60%). Abnormal node label + bar in `CRIT`.
 
+### 4.5a Bar‑row layout & alignment（条形行对齐规范 — 强制）
+Applies to **every** label+bar+value chart: funnel, 国家 spend, funnel 诊断, breakdowns, geo, RankRows. Rules exist to guarantee columns line up across rows and across charts.
+
+1. **One shared CSS grid per chart.** Every row in a chart — and its axis‑tick row — uses the **same** `grid-template-columns` with **fixed px** side columns. Never set widths per‑row. This is what makes rows align; it is non‑negotiable.
+2. **Canonical 3‑column form:** `[label fixedpx] [track 1fr] [value fixedpx]`.
+   - **label:** fixed width, **always `textAlign:left`** (so `①②③`/names line up at the left edge across all charts — never right‑align toward the bar), `whiteSpace:nowrap; overflow:hidden; textOverflow:ellipsis`. Pick the width from the longest label at the **narrowest** breakpoint — never eyeball per row.
+   - **track:** the `1fr` column. `bgInput` rail + `R.bar`; fill left‑aligned, right end rounded `` `0 ${R.bar}px ${R.bar}px 0` ``, `.lb-bar` transition; abnormal = `CRIT`.
+   - **value:** fixed width, **right‑aligned**, `c.mono` + `tabular-nums` so digits column up. Size the column for the widest formatted number (e.g. `1,240,000`).
+3. **Never let the value ride the end of the bar** (a value placed *after* the fill in the same flex line drifts with bar width → columns don't align). Value goes in its own fixed column (form above), **or** — funnel‑only variant — the count sits *inside* the bar at a fixed `left:7` and the 3rd column carries the drop %.
+4. **Axis ticks share the grid:** an empty first cell (= label col) + the ticks inside a `1fr` matching the track, `justify-content:space-between`; (+ empty trailing cell if a value column exists). Ticks then sit exactly under the plot area.
+5. Numbers: always `tabular-nums`; right‑align in value/numeric columns. **Labels are always left‑aligned** (all bar‑row charts), so the leading index/name forms a clean left edge.
+6. Tokens only: colors `c.*` (+ status), radius `R.*`, font Inter (numbers 600 / tabular).
+
 ### 4.6 Badges / status
 `padding 2px 8px`, `R.badge`, mono‑ish small. ACTIVE = teal wash; RECOVERY = red wash; PAUSED = muted; DRAFT = blue wash.
 
@@ -175,7 +190,9 @@ Header cells: 9.5px uppercase `textMute`, 1px `border` underline. Rows: 11.5px, 
 Single row, 45px, `R.ctrl`, frosted (`blur(12px)`) over `rgba(0,177,162,.05)` (dark) / `rgba(255,255,255,.55)` (light). **Border weakens in light** (`rgba(28,46,56,.08)` vs dark `rgba(60,73,72,.5)`). Contents: `@ lanbow` chip (teal) · text input · mic icon · **↵ send button** (teal wash + `rgba(44,205,194,.4)` border). Two placements share one definition: centered dock (entry) and inside the companion panel.
 
 ### 4.9 AI Companion panel
-Right overlay, `min(560px, 50vw)`, gradient blend (§3.2). Top→bottom: header (`AI 对话 · Lanbow · {product}` + collapse ×) → scrollable messages → **Suggested follow-ups** (numbered rows, `R.card`, click to send) → context chips + input bar. Slide-in via `.lb-companion`.
+Right overlay, **adaptive width** `min(94vw, 680px, max(440px, 46vw))`, fade blend (§3.2). Top→bottom: header (`AI 对话 · Lanbow · {product}` + collapse ×) → scrollable messages → **Suggested follow-ups** (numbered rows, `R.card`, click to send) → context chips + input bar. Slide-in via `.lb-companion`.
+
+**Width rule (must hold):** floor **440px** (never shrinks unbounded on narrow screens) · scales at **46vw** in the mid‑range · cap **680px** on large screens · ceiling **94vw** so it never overflows on mobile. Pattern: `min(94vw, MAX, max(MIN, FLEX vw))`.
 
 ### 4.10 Conversation messages
 - **User**: right‑aligned bubble, `bgCard` + `border`, radius `12px 12px 4px 12px`; attached context tags shown above.

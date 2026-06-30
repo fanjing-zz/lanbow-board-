@@ -1,5 +1,5 @@
 import React from 'react';
-import { c } from './theme2';
+import { c, R } from './theme2';
 import { Product } from './boardData';
 
 const WARN = '#FFB800', CRIT = '#FF4466', TEAL = '#2ccdc2';
@@ -26,7 +26,7 @@ export function MiniBars({ data, color = TEAL, h = 44 }: { data: number[]; color
   const max = Math.max(...data, 1);
   return (
     <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, height: h }}>
-      {data.map((v, i) => <div key={i} style={{ flex: 1, height: `${(v / max) * 100}%`, borderRadius: '2px 2px 0 0', background: `linear-gradient(180deg, ${color}, ${color}33)` }} />)}
+      {data.map((v, i) => <div key={i} style={{ flex: 1, height: `${(v / max) * 100}%`, borderRadius: `${R.card}px ${R.card}px 0 0`, background: `linear-gradient(180deg, ${color}, ${color}33)` }} />)}
     </div>
   );
 }
@@ -54,13 +54,13 @@ export function StackBar({ parts }: { parts: Array<{ label: string; val: number;
   const total = parts.reduce((s, p) => s + p.val, 0) || 1;
   return (
     <div>
-      <div style={{ display: 'flex', height: 12, borderRadius: 3, overflow: 'hidden', background: c.bgInput }}>
+      <div style={{ display: 'flex', height: 12, borderRadius: R.bar, overflow: 'hidden', background: c.bgInput }}>
         {parts.map((p, i) => <div key={i} title={p.label} style={{ width: `${(p.val / total) * 100}%`, background: p.color }} />)}
       </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 16px', marginTop: 12 }}>
         {parts.map((p, i) => (
           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ width: 8, height: 8, borderRadius: 2, background: p.color }} />
+            <span style={{ width: 8, height: 8, borderRadius: R.card, background: p.color }} />
             <span style={{ fontFamily: c.sans, fontSize: 11, color: c.textSec }}>{p.label}</span>
             <span style={{ fontFamily: c.mono, fontSize: 11, color: c.textPri }}>{Math.round((p.val / total) * 100)}%</span>
           </div>
@@ -75,7 +75,7 @@ export function StatTile({ label, value, delta, dcls }: { label: string; value: 
   const col = dcls === 'up' ? c.green : dcls === 'down' ? CRIT : c.textMute;
   const arrow = dcls === 'up' ? '▲' : dcls === 'down' ? '▼' : '';
   return (
-    <div style={{ padding: '10px 12px', background: c.bgInput, border: `1px solid ${c.border}`, borderRadius: 6 }}>
+    <div style={{ padding: '10px 12px', background: c.bgInput, border: `1px solid ${c.border}`, borderRadius: R.ctrl }}>
       <div style={{ fontFamily: c.mono, fontSize: 9, color: c.textMute, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</div>
       <div style={{ fontFamily: c.mono, fontSize: 18, fontWeight: 600, color: c.textPri, marginTop: 5 }}>{value}</div>
       {delta && <div style={{ fontFamily: c.mono, fontSize: 9.5, color: col, marginTop: 3 }}>{arrow} {delta.replace(/^[▲▼]\s*/, '')}</div>}
@@ -93,8 +93,8 @@ export function RankRows({ rows }: { rows: Array<{ name: string; val: string; pc
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
               <span style={{ fontFamily: c.mono, fontSize: 11, color: c.textSec, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.name}</span>
             </div>
-            <div style={{ height: 6, background: c.bgInput, borderRadius: 3, overflow: 'hidden' }}>
-              <div className="lb-bar" style={{ width: `${Math.max(2, r.pct)}%`, height: '100%', background: r.color || c.accent, borderRadius: 3 }} />
+            <div style={{ height: 6, background: c.bgInput, borderRadius: R.bar, overflow: 'hidden' }}>
+              <div className="lb-bar" style={{ width: `${Math.max(2, r.pct)}%`, height: '100%', background: r.color || c.accent, borderRadius: R.bar }} />
             </div>
           </div>
           <span style={{ fontFamily: c.mono, fontSize: 11, color: c.textPri, textAlign: 'right' }}>{r.val}</span>

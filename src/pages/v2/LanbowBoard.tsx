@@ -1,17 +1,15 @@
 import React from 'react';
-import { c, applyTheme } from './theme2';
+import { c, applyTheme, R } from './theme2';
 import {
-  PRODUCTS, TENANTS, NAV, ASSET_HEALTH, SUGGESTIONS, anomalies, DATA_LINK,
-  Product, Kpi, FunnelNode,
+  PRODUCTS, TENANTS, NAV, ASSET_HEALTH, SUGGESTIONS, anomalies,
+  Product, Kpi, FunnelNode, CreativeTopRow, EpisodePoint, Ttff, ReconcileItem, BreakdownGroup,
 } from './boardData';
 import { downloadDramaReport } from './reportTemplate';
 import { compactModule, TrendCard, ChannelMix, CompletionRing } from './boardModules';
 import { MathLoader, LoaderOverlay } from './MathLoader';
 
 const WARN = '#FFB800', CRIT = '#FF4466';
-
-// ── radius scale — strict to Figma 3097-11961 (sharp/technical: cards 2, controls 6) ──
-const R = { card: 2, nav: 4, ctrl: 6, chip: 4, badge: 4, bar: 3, pill: 6 };
+// radius scale `R` is the single source in theme2.ts (imported above)
 
 // ── icons ──
 type IP = { size?: number };
@@ -45,7 +43,7 @@ const Card = ({ title, src, span, children, style, modId }: { title: string; src
     <div className="lb-card" style={{ gridColumn: span ? `span ${span}` : undefined, background: `linear-gradient(180deg, ${c.bgCard}, ${c.bgPanel})`, border: `1px solid ${on ? c.borderStrong : c.border}`, borderRadius: R.card, overflow: 'hidden', display: 'flex', flexDirection: 'column', ...style }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 9px', borderBottom: `1px solid ${c.border}` }}>
         <span style={{ fontWeight: 600, fontSize: 12.5, position: 'relative', paddingLeft: 11 }}>
-          <span style={{ position: 'absolute', left: 0, top: 2, bottom: 1, width: 3, borderRadius: 2, background: c.accent, opacity: 0.65 }} />{title}
+          <span style={{ position: 'absolute', left: 0, top: 2, bottom: 1, width: 3, borderRadius: R.card, background: c.accent, opacity: 0.65 }} />{title}
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
           {src && <span style={{ fontFamily: c.sans, fontSize: 9.5, color: c.textMute, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{src}</span>}
@@ -240,10 +238,10 @@ export function LanbowBoard() {
   ) : null;
 
   const inputBar = (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 14, height: 45, padding: 9, borderRadius: 6, boxSizing: 'border-box',
+    <div style={{ display: 'flex', alignItems: 'center', gap: 14, height: 45, padding: 9, borderRadius: R.ctrl, boxSizing: 'border-box',
       background: isDark ? 'rgba(0,177,162,0.05)' : 'rgba(255,255,255,0.55)', border: `1px solid ${isDark ? 'rgba(60,73,72,0.5)' : 'rgba(28,46,56,0.08)'}`,
       backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', boxShadow: isDark ? '0px 25px 50px -12px rgba(0,0,0,0.25)' : '0px 16px 40px -12px rgba(20,40,55,0.12)' }}>
-      <div style={{ flexShrink: 0, background: 'rgba(0,177,162,0.2)', border: `1px solid ${isDark ? 'rgba(60,73,72,0.3)' : 'rgba(28,46,56,0.06)'}`, borderRadius: 4, padding: '5px 7px' }}>
+      <div style={{ flexShrink: 0, background: 'rgba(0,177,162,0.2)', border: `1px solid ${isDark ? 'rgba(60,73,72,0.3)' : 'rgba(28,46,56,0.06)'}`, borderRadius: R.badge, padding: '5px 7px' }}>
         <span style={{ fontFamily: c.sans, fontSize: 12, color: '#2ccdc2', letterSpacing: '-0.6px', lineHeight: '16px' }}>@ <span style={{ textTransform: 'capitalize' }}>lanbow</span></span>
       </div>
       <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') send(input); }}
@@ -251,7 +249,7 @@ export function LanbowBoard() {
       <span className="lb-ico" title="语音" style={{ flexShrink: 0, width: 16, height: 16, color: c.textMute, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
         {I({ size: 16 }, <><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0" /><path d="M12 18v3" /></>)}
       </span>
-      <button className="lb-btn" onClick={() => send(input)} title="发送" style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '9px 16px', borderRadius: 4, border: '1px solid rgba(44,205,194,0.4)', background: 'rgba(44,205,194,0.1)', color: '#2ccdc2', cursor: 'pointer' }}>
+      <button className="lb-btn" onClick={() => send(input)} title="发送" style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '9px 16px', borderRadius: R.badge, border: '1px solid rgba(44,205,194,0.4)', background: 'rgba(44,205,194,0.1)', color: '#2ccdc2', cursor: 'pointer' }}>
         <svg width="12" height="8" viewBox="0 0 12 8" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round"><path d="M11 1v2.5A1.5 1.5 0 0 1 9.5 5H2" /><path d="M4.5 2.5 2 5l2.5 2.5" /></svg>
       </button>
     </div>
@@ -383,7 +381,7 @@ export function LanbowBoard() {
 
       {/* ── Main ── */}
       <main className="lb-main" style={{ gridColumn: 2, gridRow: 2, overflowY: 'auto', padding: '22px 26px 150px' }}>
-        <div className="lb-pane" key={`${cur}-${prodId}`}><Pane cur={cur} product={product} view={view} msgs={msgs} customBoard={customBoard} onClearCustom={() => setCustomBoard([])} /></div>
+        <div className="lb-pane" key={`${cur}-${prodId}`}><Pane cur={cur} product={product} customBoard={customBoard} onClearCustom={() => setCustomBoard([])} /></div>
       </main>
 
       {loadingData && <LoaderOverlay label="加载数据…" />}
@@ -400,11 +398,12 @@ export function LanbowBoard() {
 
       {/* ── AI Companion panel (right, gradient) — shown when conversation is open ── */}
       {chatOpen && (
-        <aside className="lb-companion" style={{ position: 'fixed', top: 56, right: 0, bottom: 0, width: 'min(560px, 50vw)', zIndex: 45,
-          display: 'flex', flexDirection: 'column', paddingLeft: 150,
-          background: `radial-gradient(620px 380px at 92% -6%, ${c.accentDim}, transparent 58%), linear-gradient(to right, transparent 0px, ${c.bgPanel} 150px)`,
+        <aside className="lb-companion" style={{ position: 'fixed', top: 56, right: 0, bottom: 0, width: 'min(94vw, 680px, max(440px, 46vw))', zIndex: 45,
+          display: 'flex', flexDirection: 'column', paddingLeft: 'clamp(150px, 15vw, 226px)',
+          // single, width-proportional ease-in fade (mask %) — wider & smoother on large screens, never abrupt on small
+          background: `radial-gradient(700px 440px at 96% -8%, ${c.accentDim}, transparent 60%), ${c.bgPanel}`,
           backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)',
-          WebkitMaskImage: 'linear-gradient(to right, transparent 0px, #000 130px)', maskImage: 'linear-gradient(to right, transparent 0px, #000 130px)' }}>
+          WebkitMaskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.16) 12%, rgba(0,0,0,0.72) 24%, #000 33%)', maskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.16) 12%, rgba(0,0,0,0.72) 24%, #000 33%)' }}>
           {/* header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px 10px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -452,12 +451,13 @@ export function LanbowBoard() {
 }
 
 // ── Panes ──
-function PaneHeader({ zh, en, sub, badge }: { zh: string; en: string; sub?: string; badge?: boolean }) {
+function PaneHeader({ zh, en, sub, badge, internal }: { zh: string; en: string; sub?: string; badge?: boolean; internal?: boolean }) {
   return (
     <div style={{ marginBottom: 18 }}>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 4 }}>
         <h2 style={{ fontSize: 18, fontWeight: 600, letterSpacing: '-0.01em' }}>{zh}</h2>
         <span style={{ fontFamily: c.mono, fontSize: 10.5, color: c.textMute, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{en}</span>
+        {internal && <span style={{ fontFamily: c.mono, fontSize: 8.5, color: WARN, border: `1px solid ${WARN}`, borderRadius: R.badge, padding: '1px 6px', letterSpacing: '0.08em' }}>INTERNAL ONLY</span>}
         {badge && <span style={{ fontFamily: c.mono, fontSize: 8.5, color: WARN, border: `1px solid ${WARN}`, borderRadius: R.badge, padding: '1px 6px', letterSpacing: '0.08em' }}>DEMO 数据模拟放大 30×</span>}
       </div>
       {sub && <div style={{ color: c.textSec, fontSize: 11.5, fontFamily: c.mono }}>{sub}</div>}
@@ -469,7 +469,7 @@ const Placeholder = ({ zh, en, note }: { zh: string; en: string; note: string })
   <><PaneHeader zh={zh} en={en} /><Card title={`${zh}（AI 待生成）`}><div style={{ color: c.textMute, fontSize: 12, padding: '24px 4px', lineHeight: 1.8 }}>{note}</div></Card></>
 );
 
-function Pane({ cur, product, view, msgs, customBoard, onClearCustom }: { cur: string; product: Product; view: 'internal' | 'external'; msgs: Msg[]; customBoard: string[]; onClearCustom: () => void }) {
+function Pane({ cur, product, customBoard, onClearCustom }: { cur: string; product: Product; customBoard: string[]; onClearCustom: () => void }) {
   if (cur === 'overview') {
     const ano = anomalies(product);
     return (
@@ -500,7 +500,7 @@ function Pane({ cur, product, view, msgs, customBoard, onClearCustom }: { cur: s
         )}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
           <Card title="今日大盘 KPI" src={product.kpiSrc} span={2}><div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>{product.kpis.map((k, i) => <KpiCell key={i} k={k} />)}</div></Card>
-          <Card title={`核心链路流失 · ${product.funnel.length} 节点`} src="广告→落地→注册→首集→付费"><Funnel nodes={product.funnel} /></Card>
+          <Card title={`核心链路流失 · ${product.funnel.length} 节点`} src={product.funnelSrc || '广告→落地→注册→首集→付费'}><Funnel nodes={product.funnel} /></Card>
           <Card title="异常流失分析 · 诊断 + 建议" src="strategy-engine">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {ano.length === 0 && <div style={{ color: c.textMute, fontSize: 12 }}>各段流失在阈值内。</div>}
@@ -517,7 +517,7 @@ function Pane({ cur, product, view, msgs, customBoard, onClearCustom }: { cur: s
             </div>
           </Card>
           <Card title="国家 / 地区分布" src="cf_stream ⋈ roi"><GeoCard product={product} /></Card>
-          <Card title="剧目 / 内容 Top" src="content"><SeriesTable product={product} /></Card>
+          <Card title={`${product.contentZh || '剧目 / 内容'} Top`} src="content"><SeriesTable product={product} /></Card>
         </div>
         {/* extended module styles */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14, marginTop: 14 }}>
@@ -528,30 +528,12 @@ function Pane({ cur, product, view, msgs, customBoard, onClearCustom }: { cur: s
       </>
     );
   }
-  if (cur === 'content') return <><PaneHeader zh="剧目" en="Content" sub={`${product.label} · 内容表现`} /><Card title="剧目表现"><SeriesTable product={product} /></Card></>;
+  if (cur === 'content') return <ContentPane product={product} />;
   if (cur === 'delivery') return <><PaneHeader zh="投放" en="Delivery" sub={`${product.label} · 计划/活动`} /><Card title="在投计划">{product.plans.length ? <PlansTable product={product} /> : <div style={{ color: c.textMute, fontSize: 12, padding: '20px 4px' }}>{product.label} 当前无在投计划（{product.kpiSrc}）。</div>}</Card></>;
   if (cur === 'accounts') return <><PaneHeader zh="账号" en="Accounts" sub={`${product.label} · 渠道/支付/归因授权`} /><Card title="账号 & 授权"><AccountsTable product={product} /></Card></>;
   if (cur === 'research') return <><PaneHeader zh="产品调研" en="Research" sub={`${product.label} · 市场/竞品/洞察`} /><div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>{product.research.length ? product.research.map((r, i) => (
     <Card key={i} title={r.t} src={r.src}><div style={{ fontFamily: c.mono, fontSize: 10, color: c.textMute, marginBottom: 6 }}>{r.meta}</div><div style={{ fontSize: 12, color: c.textSec, lineHeight: 1.7 }}>{r.desc}</div></Card>
   )) : <Card title="产品调研（AI 待生成）"><div style={{ color: c.textMute, fontSize: 12, padding: '20px 4px' }}>暂无调研记录。</div></Card>}</div></>;
-  if (cur === 'chat') return (
-    <div style={{ width: 'min(984px, calc(100vw - 120px))', margin: '0 auto' }}>
-      <PaneHeader zh="对话" en="Chat" sub={`@Lanbow · 基于 ${product.label} envelope 数据`} />
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {msgs.length === 0 && <div style={{ color: c.textMute, fontSize: 12 }}>点击任意模块右上角的 ⊕ 加入 AI 上下文，再在下方提问；或直接输入问题。</div>}
-        {msgs.map(m => m.role === 'user'
-          ? <div key={m.id} style={{ alignSelf: 'flex-end', maxWidth: 520, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 5 }}>
-              {m.mods && m.mods.length > 0 && (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, justifyContent: 'flex-end' }}>
-                  {m.mods.map(t => <span key={t} style={{ fontFamily: c.sans, fontSize: 10, color: c.accent, background: c.accentDim, border: `1px solid ${c.borderStrong}`, borderRadius: R.badge, padding: '2px 7px' }}>{t}</span>)}
-                </div>
-              )}
-              {m.text && <div style={{ background: c.bgCard, border: `1px solid ${c.border}`, borderRadius: '10px 10px 3px 10px', padding: '10px 14px', fontFamily: c.sans, fontSize: 12.5 }}>{m.text}</div>}
-            </div>
-          : <div key={m.id} style={{ alignSelf: 'flex-start', maxWidth: 620, borderLeft: `3px solid ${c.accent}`, paddingLeft: 12, color: c.textSec, fontSize: 12.5, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{m.text}</div>)}
-      </div>
-    </div>
-  );
   if (cur === 'alerts') return (
     <><PaneHeader zh="告警" en="Alerts" sub={`${product.label} · 阈值告警 / alerts-router`} />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
@@ -601,17 +583,356 @@ function Pane({ cur, product, view, msgs, customBoard, onClearCustom }: { cur: s
         <Card title="阈值 / Thresholds" src="brief"><ThreshTable rows={product.thresholds} /></Card>
       </div></>
   );
-  if (cur === 'analysis') return (
-    <><PaneHeader zh="数据分析" en="Analysis" sub={`${product.label} · 数据链路 / 多维下钻`} />
-      <Card title="数据链路 · mcp-flow" src="channels → envelope → outputs"><DataLink /></Card>
-      <div style={{ height: 14 }} />
-      <Card title="国家 / 地区分布" src="cf_stream ⋈ roi"><GeoCard product={product} /></Card></>
-  );
+  if (cur === 'analysis') return <AnalysisPane product={product} />;
   if (cur === 'budget') return (
     <><PaneHeader zh="预算" en="Budget" sub={`${product.label} · 计划预算分配`} />
       <Card title="预算分配">{product.plans.length ? <PlansTable product={product} /> : <div style={{ color: c.textMute, fontSize: 12, padding: '16px 4px' }}>当前无在投计划预算（{product.kpiSrc}）。</div>}</Card></>
   );
+  if (cur === 'creative') return <CreativePane product={product} />;
   return <Placeholder zh="素材" en="Creative" note="素材库与三阶段（原片→混剪→二创）表现分析将由 AI 生成。" />;
+}
+
+function CreativePane({ product }: { product: Product }) {
+  const cr = product.creative;
+  if (!cr) return <Placeholder zh="素材" en="Creative" note="素材库与三阶段（原片→混剪→二创）表现分析将由 AI 生成。" />;
+  return (
+    <>
+      <PaneHeader zh="素材" en="Creative" badge sub={`${product.label} · 2026-06-23 · ${product.tz || 'GMT'} · ${product.kpiSrc}`} />
+      {/* asset health */}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+        <span style={{ fontFamily: c.mono, fontSize: 10, color: c.textLabel, alignSelf: 'center', textTransform: 'uppercase' }}>资产健康度</span>
+        {ASSET_HEALTH.map(a => <span key={a} style={{ fontFamily: c.mono, fontSize: 10, padding: '3px 9px', borderRadius: R.chip, background: c.accentDim, color: c.accent, border: `1px solid ${c.borderStrong}` }}>● {a}</span>)}
+      </div>
+      {/* creative-center banner */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '16px 20px', marginBottom: 16, border: `1px solid ${c.border}`, borderRadius: R.card, background: `linear-gradient(180deg, ${c.bgCard}, ${c.bgPanel})` }}>
+        <div style={{ fontSize: 13, color: c.textSec }}><b style={{ color: c.textPri }}>🎬 素材中心：</b>{cr.intro}</div>
+        <button className="lb-btn" style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 16px', borderRadius: R.ctrl, border: 'none', background: c.accent, color: c.bgBase, cursor: 'pointer', fontFamily: c.sans, fontSize: 12.5, fontWeight: 600 }}>{cr.cta} ↗</button>
+      </div>
+      {/* hooks + checklist */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1.7fr 1fr', gap: 14, marginBottom: 14 }}>
+        <Card title={cr.hooksTitle} src="creative variants" modId="mod-creative-hooks">
+          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cr.hooks.length}, 1fr)`, gap: 12 }}>
+            {cr.hooks.map(h => (
+              <div key={h.id} style={{ display: 'flex', flexDirection: 'column', gap: 14, background: c.bgPanel, border: `1px solid ${c.border}`, borderRadius: R.card, padding: 14 }}>
+                <div style={{ fontFamily: c.mono, fontSize: 11, color: c.accent, letterSpacing: '0.04em' }}>HOOK {h.id} · CTR {h.ctr}</div>
+                <div style={{ flex: 1, fontSize: 13, color: c.textPri, lineHeight: 1.55 }}>&ldquo;{h.text}&rdquo;</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: c.mono, fontSize: 11, color: c.textMute }}>
+                  <span>曝光 <span style={{ color: c.textPri }}>{h.imp}</span></span>
+                  <span>花费 <span style={{ color: c.textPri }}>{h.spend}</span></span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+        <Card title={cr.checkTitle} src="creative-ops · evaluate" modId="mod-creative-check">
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {cr.checks.map((ck, i) => (
+              <div key={ck.k} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 0', borderBottom: i < cr.checks.length - 1 ? `1px solid ${c.border}` : 'none' }}>
+                <span style={{ fontSize: 12.5, color: c.textPri }}>{ck.k}</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: c.mono, fontSize: 12, color: c.textPri }}>
+                  <span style={{ width: 15, height: 15, borderRadius: '50%', background: ck.ok ? 'rgba(0,204,119,.16)' : c.bgInput, color: ck.ok ? c.green : c.textMute, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 9 }}>{ck.ok ? '✓' : '·'}</span>
+                  {ck.v}
+                </span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+      {/* top creatives by spend */}
+      <Card title={cr.topTitle} src="meta ad level" modId="mod-creative-top">
+        {cr.topRows.length ? <CreativeTopTable rows={cr.topRows} /> : <div style={{ color: c.textMute, fontSize: 12, padding: '18px 4px' }}>当前账户素材消耗为 0，暂无可排序的创意（{product.kpiSrc}）。</div>}
+      </Card>
+    </>
+  );
+}
+
+function ContentPane({ product }: { product: Product }) {
+  const zh = product.contentZh || '剧目';
+  return (
+    <>
+      <PaneHeader zh={zh} en="Content" badge sub={`${product.label} · 2026-06-23 · ${product.tz || 'GMT'} · ${product.kpiSrc}`} />
+      {/* asset health */}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+        <span style={{ fontFamily: c.mono, fontSize: 10, color: c.textLabel, alignSelf: 'center', textTransform: 'uppercase' }}>资产健康度</span>
+        {ASSET_HEALTH.map(a => <span key={a} style={{ fontFamily: c.mono, fontSize: 10, padding: '3px 9px', borderRadius: R.chip, background: c.accentDim, color: c.accent, border: `1px solid ${c.borderStrong}` }}>● {a}</span>)}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+        <Card title={`${zh}表现 · 按 sessions`} src="db top_series" modId="mod-content-series"><ContentSeriesTable product={product} /></Card>
+        {product.episodes && <Card title="集数留存流失 · EP1→EPn" src="per-episode 独立访客" modId="mod-content-retention"><EpisodeChart data={product.episodes} /></Card>}
+      </div>
+      {product.ttff && (
+        <div style={{ marginTop: 14 }}>
+          <Card title="加载时长 ttff" src="play_sessions" modId="mod-content-ttff"><TtffStats t={product.ttff} /></Card>
+        </div>
+      )}
+    </>
+  );
+}
+
+function ContentSeriesTable({ product }: { product: Product }) {
+  if (!product.series.length) return <div style={{ color: c.textMute, fontSize: 12, padding: '12px 4px' }}>暂无内容数据。</div>;
+  const eng = product.contentZh === '商品' ? '加购率' : '起播率';
+  return (
+    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+      <thead><tr>
+        <th style={th}>{product.contentZh || '剧目'}</th>
+        <th style={{ ...th, textAlign: 'right' }}>会话</th>
+        <th style={{ ...th, textAlign: 'right' }}>{eng}</th>
+        <th style={{ ...th, textAlign: 'right' }}>付费</th>
+        <th style={{ ...th, textAlign: 'right' }}>D0 ROI</th>
+      </tr></thead>
+      <tbody>{product.series.map((s, i) => (
+        <tr key={i} className="lb-row">
+          <td style={{ ...td, color: c.textPri, maxWidth: 260, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.t}</td>
+          <td style={{ ...td, textAlign: 'right' }}>{s.sess}</td>
+          <td style={{ ...td, textAlign: 'right' }}>{s.play}%</td>
+          <td style={{ ...td, textAlign: 'right' }}>{s.paid}</td>
+          <td style={{ ...td, textAlign: 'right', color: s.roas > 0 ? c.green : WARN }}>{s.roas.toFixed(3)}</td>
+        </tr>
+      ))}</tbody>
+    </table>
+  );
+}
+
+function EpisodeChart({ data }: { data: EpisodePoint[] }) {
+  const W = 620, H = 240, padL = 38, padR = 14, padT = 14, padB = 28;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const max = Math.max(200, Math.ceil(Math.max(...data.map(d => d.value)) / 200) * 200);
+  const x = (i: number) => padL + (data.length > 1 ? (i / (data.length - 1)) * plotW : 0);
+  const y = (v: number) => padT + plotH - (v / max) * plotH;
+  const pts = data.map((d, i) => [x(i), y(d.value)] as [number, number]);
+  const line = pts.map((p, i) => `${i ? 'L' : 'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
+  const area = `${line} L${x(data.length - 1).toFixed(1)},${(padT + plotH).toFixed(1)} L${padL.toFixed(1)},${(padT + plotH).toFixed(1)} Z`;
+  const ticks = [0, max / 4, max / 2, (max * 3) / 4, max];
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto', display: 'block' }}>
+      <defs><linearGradient id="lb-epg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor={c.accent} stopOpacity="0.2" /><stop offset="1" stopColor={c.accent} stopOpacity="0" /></linearGradient></defs>
+      {ticks.map((t, i) => (
+        <g key={i}>
+          <line x1={padL} y1={y(t)} x2={W - padR} y2={y(t)} stroke={c.border} strokeWidth="1" />
+          <text x={padL - 8} y={y(t) + 3.5} textAnchor="end" fontFamily="'Inter',sans-serif" fontSize="10" fill={c.textMute}>{t}</text>
+        </g>
+      ))}
+      <path d={area} fill="url(#lb-epg)" />
+      <path className="lb-bar" d={line} fill="none" stroke={c.accent} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+      {pts.map((p, i) => <circle key={i} cx={p[0]} cy={p[1]} r="4" fill={data[i].abn ? CRIT : c.accent} stroke={c.bgCard} strokeWidth="2" />)}
+      {data.map((d, i) => i % 2 === 0 ? <text key={i} x={x(i)} y={H - 7} textAnchor="middle" fontFamily="'Inter',sans-serif" fontSize="10" fill={c.textMute}>{d.ep}{i === 0 ? ' 首集' : ''}</text> : null)}
+    </svg>
+  );
+}
+
+function TtffStats({ t }: { t: Ttff }) {
+  const items: [string, string][] = [['平均加载', t.avg], ['P50 加载', t.p50], ['TTFF 缺失', t.missing]];
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)' }}>
+      {items.map(([l, v], i) => (
+        <div key={l} style={{ padding: '4px 20px', borderLeft: `2px solid ${i === 2 ? c.green : WARN}` }}>
+          <div style={{ fontSize: 11, color: c.textLabel, marginBottom: 12 }}>{l}</div>
+          <div style={{ fontFamily: c.mono, fontSize: 30, fontWeight: 600, color: c.textPri, lineHeight: 1 }}>{v}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function CreativeTopTable({ rows }: { rows: CreativeTopRow[] }) {
+  const cols = ['创意', '账号', '花费', '曝光', '点击', 'CPM', 'CPC', 'CTR', '3S播放率', '完播率', '付费', 'D0 ROI', '状态'];
+  return (
+    <div style={{ overflowX: 'auto' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 920 }}>
+        <thead><tr>{cols.map((h, i) => <th key={h} style={{ ...th, textAlign: i < 2 ? 'left' : 'right' }}>{h}</th>)}</tr></thead>
+        <tbody>{rows.map((r, i) => (
+          <tr key={i} className="lb-row">
+            <td style={{ ...td, color: c.textPri, whiteSpace: 'nowrap' }}>{r.name}</td>
+            <td style={{ ...td, color: c.accent }}>{r.acct}</td>
+            <td style={{ ...td, textAlign: 'right', color: c.textPri }}>{r.spend}</td>
+            <td style={{ ...td, textAlign: 'right' }}>{r.imp}</td>
+            <td style={{ ...td, textAlign: 'right' }}>{r.clicks}</td>
+            <td style={{ ...td, textAlign: 'right' }}>{r.cpm}</td>
+            <td style={{ ...td, textAlign: 'right' }}>{r.cpc}</td>
+            <td style={{ ...td, textAlign: 'right' }}>{r.ctr}</td>
+            <td style={{ ...td, textAlign: 'right' }}>{r.play3s}</td>
+            <td style={{ ...td, textAlign: 'right' }}>{r.complete}</td>
+            <td style={{ ...td, textAlign: 'right' }}>{r.paid}</td>
+            <td style={{ ...td, textAlign: 'right', color: c.green }}>{r.roi}</td>
+            <td style={{ ...td, textAlign: 'right', color: stColor(r.st) }}>{r.st}</td>
+          </tr>
+        ))}</tbody>
+      </table>
+    </div>
+  );
+}
+
+// ── analysis pane (internal-scope) ──
+const niceMax = (v: number) => {
+  if (v <= 0) return 1;
+  const p = Math.pow(10, Math.floor(Math.log10(v)));
+  const n = v / p;
+  const m = n <= 1 ? 1 : n <= 1.5 ? 1.5 : n <= 2 ? 2 : n <= 3 ? 3 : n <= 5 ? 5 : n <= 7 ? 7 : 10;
+  return m * p;
+};
+const axisTicks = (max: number) => [0, max / 4, max / 2, (max * 3) / 4, max];
+
+function AnalysisPane({ product }: { product: Product }) {
+  const breakdowns = product.breakdowns || [{ title: '版位', rows: [] }, { title: '设备', rows: [] }, { title: '受众', rows: [] }];
+  return (
+    <>
+      <PaneHeader zh="数据分析" en="Analysis" badge internal sub={`${product.label} · 2026-06-23 · ${product.tz || 'GMT'} · ${product.kpiSrc}`} />
+      {/* asset health */}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+        <span style={{ fontFamily: c.mono, fontSize: 10, color: c.textLabel, alignSelf: 'center', textTransform: 'uppercase' }}>资产健康度</span>
+        {ASSET_HEALTH.map(a => <span key={a} style={{ fontFamily: c.mono, fontSize: 10, padding: '3px 9px', borderRadius: R.chip, background: c.accentDim, color: c.accent, border: `1px solid ${c.borderStrong}` }}>● {a}</span>)}
+      </div>
+      {/* internal-scope banner */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '14px 18px', marginBottom: 16, borderRadius: R.card, background: c.accentDim, border: `1px solid ${c.borderStrong}`, fontSize: 13, color: c.textSec, lineHeight: 1.5 }}>
+        <span style={{ color: c.accent, fontWeight: 600 }}>🔒 内部口径页：</span>渠道分布 / funnel 诊断 / cohort / ROI 分层 / 多源对账。对外视图不展示。
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+        <Card title="国家 spend 分布" src="cf_stream by country" modId="mod-analysis-geo"><SpendByCountry product={product} /></Card>
+        <Card title="版位 / 设备 / 受众" src="meta breakdowns (参考)" modId="mod-analysis-breakdown"><Breakdowns groups={breakdowns} /></Card>
+        <Card title="漏斗最差阶段诊断" src="funnel_diagnose" modId="mod-analysis-funnel"><FunnelDiagnose nodes={product.funnel} /></Card>
+        <Card title="多源对账 · 4 source" src="reconcile_4_source" modId="mod-analysis-reconcile">
+          {product.reconcile ? <Reconcile4 items={product.reconcile} /> : <div style={{ color: c.textMute, fontSize: 12, padding: '12px 4px' }}>暂无对账数据。</div>}
+        </Card>
+      </div>
+      <div style={{ marginTop: 14 }}>
+        <Card title="cohort 留存 · signup week × day" src="cohort_analysis" modId="mod-analysis-cohort"><CohortHeatmap seed={product.id} /></Card>
+      </div>
+    </>
+  );
+}
+
+function SpendByCountry({ product }: { product: Product }) {
+  const rows = product.geo.filter(g => g.spend > 0);
+  if (!rows.length) return <div style={{ color: c.textMute, fontSize: 12, padding: '8px 4px' }}>各国家 / 地区消耗暂为 0（{product.kpiSrc}）。</div>;
+  const max = niceMax(Math.max(...rows.map(r => r.spend)));
+  const cols = '96px 1fr 64px';   // [label] [track] [value] — shared by rows + axis (see DESIGN_SYSTEM §4.5a)
+  return (
+    <div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {rows.map(r => (
+          <div key={r.c} style={{ display: 'grid', gridTemplateColumns: cols, alignItems: 'center', gap: 12 }}>
+            <span style={{ fontFamily: c.mono, fontSize: 12, color: c.textSec, textAlign: 'left', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.label || r.c}</span>
+            <div className="lb-bar" style={{ height: 26, width: `${(r.spend / max) * 100}%`, minWidth: 2, background: c.accent, borderRadius: `0 ${R.bar}px ${R.bar}px 0` }} />
+            <span style={{ fontFamily: c.mono, fontSize: 12, color: c.textSec, textAlign: 'right', whiteSpace: 'nowrap' }}>{r.spend.toLocaleString()}</span>
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: cols, gap: 12, marginTop: 8 }}>
+        <span />
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: c.mono, fontSize: 9.5, color: c.textMute }}>
+          {axisTicks(max).map((t, i) => <span key={i}>{Math.round(t).toLocaleString()}</span>)}
+        </div>
+        <span />
+      </div>
+    </div>
+  );
+}
+
+function Breakdowns({ groups }: { groups: BreakdownGroup[] }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+      {groups.map(g => (
+        <div key={g.title}>
+          <div style={{ fontFamily: c.mono, fontSize: 10.5, color: c.textMute, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>{g.title}</div>
+          {g.rows.length ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {g.rows.map(r => (
+                <div key={r.k} style={{ display: 'grid', gridTemplateColumns: '100px 1fr 42px', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontFamily: c.mono, fontSize: 11, color: c.textSec, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.k}</span>
+                  <div style={{ height: 6, background: c.bgInput, borderRadius: R.bar, overflow: 'hidden' }}><div className="lb-bar" style={{ width: `${r.pct}%`, height: '100%', background: c.accent, borderRadius: R.bar }} /></div>
+                  <span style={{ fontFamily: c.mono, fontSize: 11, color: c.textPri, textAlign: 'right' }}>{r.v}</span>
+                </div>
+              ))}
+            </div>
+          ) : <div style={{ fontFamily: c.sans, fontSize: 12, color: c.textMute, paddingLeft: 2 }}>暂无数据</div>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function FunnelDiagnose({ nodes }: { nodes: FunnelNode[] }) {
+  const amax = niceMax(Math.max(...nodes.map(n => n.value), 1));
+  const cols = '186px 1fr 80px';   // [label+drop%] [track] [value] — shared by rows + axis (see DESIGN_SYSTEM §4.5a)
+  return (
+    <div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 13 }}>
+        {nodes.map((f, i) => {
+          const bad = f.abn || (f.drop != null && f.drop <= -60);
+          return (
+            <div key={i} style={{ display: 'grid', gridTemplateColumns: cols, alignItems: 'center', gap: 12 }}>
+              <div style={{ fontFamily: c.mono, fontSize: 11.5, color: f.abn ? CRIT : c.textSec, textAlign: 'left', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {f.step} {f.label}{f.drop != null && <span style={{ color: bad ? CRIT : c.textMute, marginLeft: 6 }}>{f.drop.toFixed(1)}%</span>}
+              </div>
+              <div className="lb-bar" style={{ height: 22, width: `${Math.max(0.3, (f.value / amax) * 100)}%`, minWidth: 2, background: f.abn ? CRIT : c.accent, borderRadius: `0 ${R.bar}px ${R.bar}px 0` }} />
+              <span style={{ fontFamily: c.mono, fontSize: 11.5, color: c.textSec, textAlign: 'right', whiteSpace: 'nowrap' }}>{f.value.toLocaleString()}</span>
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: cols, gap: 12, marginTop: 8 }}>
+        <span />
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: c.mono, fontSize: 9.5, color: c.textMute }}>
+          {axisTicks(amax).map((t, i) => <span key={i}>{Math.round(t).toLocaleString()}</span>)}
+        </div>
+        <span />
+      </div>
+    </div>
+  );
+}
+
+function Reconcile4({ items }: { items: ReconcileItem[] }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+      {items.map((it, i) => {
+        const col = it.cls === 'good' ? c.green : it.cls === 'crit' ? CRIT : it.cls === 'warn' ? WARN : c.textPri;
+        return (
+          <div key={i} style={{ borderLeft: `2px solid ${it.cls ? col : c.borderStrong}`, paddingLeft: 14 }}>
+            <div style={{ fontFamily: c.mono, fontSize: 10, color: c.textMute, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>{it.label}</div>
+            <div style={{ fontFamily: c.mono, fontSize: 30, fontWeight: 600, color: col, lineHeight: 1 }}>{it.value}</div>
+            {it.tag && <span style={{ display: 'inline-block', marginTop: 10, fontFamily: c.mono, fontSize: 10, color: c.textSec, background: c.bgInput, border: `1px solid ${c.border}`, borderRadius: R.badge, padding: '3px 8px' }}>{it.tag}</span>}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function CohortHeatmap({ seed }: { seed: string }) {
+  const weeks = ['W22', 'W21', 'W20', 'W19', 'W18'];
+  const days = ['D0', 'D1', 'D3', 'D7', 'D14', 'D30'];
+  const fac = [1, 0.84, 0.685, 0.52, 0.36, 0.197];
+  const s = seed.split('').reduce((a, ch) => a + ch.charCodeAt(0), 0);
+  const top = 88 + (s % 10);
+  const values = weeks.map((_, r) => fac.map(f => Math.round((top - r * 8) * f)));
+  return (
+    <div>
+      <div style={{ display: 'grid', gridTemplateColumns: `40px repeat(${days.length}, 1fr)`, gap: 4 }}>
+        {weeks.map((w, r) => (
+          <React.Fragment key={w}>
+            <span style={{ fontFamily: c.mono, fontSize: 11, color: c.textMute, display: 'flex', alignItems: 'center' }}>{w}</span>
+            {values[r].map((v, col) => {
+              const t = Math.max(0, Math.min(1, v / 100));
+              return (
+                <div key={col} style={{ position: 'relative', height: 38, borderRadius: R.bar, overflow: 'hidden', background: c.bgInput, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ position: 'absolute', inset: 0, background: c.accent, opacity: 0.1 + t * 0.82 }} />
+                  <span style={{ position: 'relative', fontFamily: c.mono, fontSize: 12, color: t > 0.5 ? c.bgBase : c.textPri }}>{v}</span>
+                </div>
+              );
+            })}
+          </React.Fragment>
+        ))}
+        <span />
+        {days.map(d => <span key={d} style={{ fontFamily: c.mono, fontSize: 10, color: c.textMute, textAlign: 'center', paddingTop: 6 }}>{d}</span>)}
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 16 }}>
+        <span style={{ fontFamily: c.mono, fontSize: 10, color: c.textMute }}>0</span>
+        <div style={{ width: 240, height: 8, borderRadius: R.badge, background: c.accent, WebkitMaskImage: 'linear-gradient(90deg, transparent, #000)', maskImage: 'linear-gradient(90deg, transparent, #000)' }} />
+        <span style={{ fontFamily: c.mono, fontSize: 10, color: c.textMute }}>100</span>
+      </div>
+    </div>
+  );
 }
 
 function GeoCard({ product }: { product: Product }) {
@@ -640,27 +961,6 @@ function ThreshTable({ rows }: { rows: [string, string, string][] }) {
   );
 }
 
-function DataLink() {
-  const colColor: Record<string, string> = { SOURCES: c.blue, ENGINE: c.accent, TRUTH: c.green, CONSUMERS: c.accentMid, OUTPUTS: c.textSec };
-  return (
-    <div style={{ display: 'flex', alignItems: 'stretch', gap: 10, overflowX: 'auto' }}>
-      {DATA_LINK.cols.map((col, ci) => (
-        <React.Fragment key={col.title}>
-          <div style={{ flex: 1, minWidth: 124 }}>
-            <div style={{ fontFamily: c.mono, fontSize: 9.5, color: c.textMute, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>{col.title}</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {col.items.map(it => (
-                <div key={it} style={{ fontFamily: c.mono, fontSize: 11, color: c.textSec, padding: '7px 9px', background: c.bgInput, border: `1px solid ${c.border}`, borderRadius: R.ctrl, borderLeft: `2px solid ${colColor[col.title] || c.accent}` }}>{it}</div>
-              ))}
-            </div>
-          </div>
-          {ci < DATA_LINK.cols.length - 1 && <div style={{ display: 'flex', alignItems: 'center', color: c.textMute, paddingTop: 22 }}>→</div>}
-        </React.Fragment>
-      ))}
-    </div>
-  );
-}
-
 const th: React.CSSProperties = { fontFamily: c.mono, fontSize: 9.5, color: c.textMute, textTransform: 'uppercase', letterSpacing: '0.06em', textAlign: 'left', padding: '8px 10px', borderBottom: `1px solid ${c.border}` };
 const td: React.CSSProperties = { fontFamily: c.mono, fontSize: 11.5, color: c.textSec, padding: '9px 10px', borderBottom: `1px solid ${c.border}` };
 const stColor = (s: string) => s === 'good' || s === '放量' ? c.green : s === 'warn' || s === '观察' ? WARN : s === '建议关停' || s === '警戒' ? CRIT : c.textSec;
@@ -669,7 +969,7 @@ function SeriesTable({ product }: { product: Product }) {
   if (!product.series.length) return <div style={{ color: c.textMute, fontSize: 12, padding: '12px 4px' }}>暂无内容数据。</div>;
   return (
     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-      <thead><tr><th style={th}>剧目 / 内容</th><th style={{ ...th, textAlign: 'right' }}>会话</th><th style={{ ...th, textAlign: 'right' }}>完播%</th><th style={{ ...th, textAlign: 'right' }}>付费</th><th style={{ ...th, textAlign: 'right' }}>ROAS</th><th style={{ ...th, textAlign: 'right' }}>状态</th></tr></thead>
+      <thead><tr><th style={th}>{product.contentZh || '剧目 / 内容'}</th><th style={{ ...th, textAlign: 'right' }}>会话</th><th style={{ ...th, textAlign: 'right' }}>{product.playLabel || '完播%'}</th><th style={{ ...th, textAlign: 'right' }}>付费</th><th style={{ ...th, textAlign: 'right' }}>ROAS</th><th style={{ ...th, textAlign: 'right' }}>状态</th></tr></thead>
       <tbody>{product.series.map((s, i) => (
         <tr key={i} className="lb-row"><td style={{ ...td, color: c.textPri, maxWidth: 280, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.t}</td>
           <td style={{ ...td, textAlign: 'right' }}>{s.sess}</td><td style={{ ...td, textAlign: 'right' }}>{s.play}%</td><td style={{ ...td, textAlign: 'right' }}>{s.paid}</td>

@@ -10,12 +10,32 @@ export interface AccountRow { plat: string; name: string; aid: string; kind: str
 export interface ResearchRow { t: string; meta: string; src: string; desc: string; }
 export interface AlertRow { lv: 'crit' | 'warn' | 'info'; t: string; d: string; time: string; }
 export interface AutoRule { name: string; cond: string; act: string; on: boolean; }
+// ── creative module (素材中心) ──
+export interface CreativeHook { id: string; ctr: string; text: string; imp: string; spend: string; }
+export interface CreativeCheck { k: string; v: string; ok: boolean; }
+export interface CreativeTopRow { name: string; acct: string; spend: string; imp: string; clicks: string; cpm: string; cpc: string; ctr: string; play3s: string; complete: string; paid: string; roi: string; st: string; }
+export interface Creative { intro: string; cta: string; hooksTitle: string; hooks: CreativeHook[]; checkTitle: string; checks: CreativeCheck[]; topTitle: string; topRows: CreativeTopRow[]; }
+// ── content module (剧目中心) ──
+export interface EpisodePoint { ep: string; value: number; abn?: boolean; }
+export interface Ttff { avg: string; p50: string; missing: string; }
+// ── analysis module (内部口径页) ──
+export interface ReconcileItem { label: string; value: string; cls?: 'good' | 'crit' | 'warn'; tag?: string; }
+export interface BreakdownGroup { title: string; rows: { k: string; v: string; pct: number }[]; }
 
 export interface Product {
   id: string; label: string; tenant: string; tz?: string; accts?: number; sim?: boolean;
   kpiSrc: string; kpis: Kpi[]; funnel: FunnelNode[]; geo: GeoRow[]; series: SeriesRow[];
   plans: PlanRow[]; accounts: AccountRow[]; research: ResearchRow[];
   alerts: AlertRow[]; thresholds: [string, string, string][]; rules: AutoRule[];
+  creative?: Creative;
+  episodes?: EpisodePoint[];   // per-episode retention curve (content pane)
+  ttff?: Ttff;                 // load-timing stats (content pane)
+  reconcile?: ReconcileItem[]; // multi-source reconcile (analysis pane)
+  breakdowns?: BreakdownGroup[]; // placement/device/audience (analysis pane)
+  // vertical-aware labels (default = short-drama wording)
+  contentZh?: string;   // '剧目' | '商品' …
+  playLabel?: string;   // '完播%' | '复购%' …
+  funnelSrc?: string;   // funnel card subtitle
 }
 
 // ── Data link (mcp-flow: channels → collect_window → envelope → 5 skills → outputs) ──
@@ -31,6 +51,7 @@ export const DATA_LINK = {
 
 export const TENANTS = [
   { id: 'chenkai', label: 'chenkai' },
+  { id: 'auvora-dtc', label: '海外电商品牌（示例）' },
   { id: 'local-merchant-demo', label: '本地服务客户（示例）' },
 ];
 
@@ -98,7 +119,14 @@ const drama: Product = {
     { t: 'One Last Heartbeat: If You N…', sess: 30, play: 0, paid: 0, roas: 0, st: 'warn' },
     { t: "The Alpha's Hidden Heir", sess: 30, play: 0, paid: 0, roas: 0, st: 'warn' },
     { t: 'To Love and to Destroy', sess: 60, play: 0, paid: 0, roas: 0, st: 'warn' },
+    { t: 'Everybody Step Aside, The Ma…', sess: 30, play: 0, paid: 0, roas: 0, st: 'warn' },
+    { t: 'My Destined Mate An Alpha In…', sess: 30, play: 0, paid: 0, roas: 0, st: 'warn' },
   ],
+  episodes: [
+    { ep: 'EP1', value: 750 }, { ep: 'EP2', value: 120, abn: true }, { ep: 'EP3', value: 60, abn: true },
+    { ep: 'EP4', value: 5, abn: true }, { ep: 'EP5', value: 3 }, { ep: 'EP6', value: 3 }, { ep: 'EP7', value: 60 },
+  ],
+  ttff: { avg: '2391ms', p50: '1519ms', missing: '0.0%' },
   plans: [],
   accounts: [
     { plat: 'META', name: 'drama BM', aid: 'act_132374…7080', kind: '渠道', st: 'ok', stx: '已授权', bal: '—', sync: '2 min ago', meta: '真实' },
@@ -119,6 +147,33 @@ const drama: Product = {
     { name: '低 ROAS 关停', cond: 'D0 ROAS < 0.2 且花费 > $50', act: '暂停 ad set', on: true },
     { name: '高 ROAS 放量', cond: 'D0 ROAS ≥ 0.6 连续 2 天', act: '预算 +20%', on: true },
     { name: '素材衰减换新', cond: '3s 留存 < 0.30', act: '提示换素材', on: false },
+  ],
+  creative: {
+    intro: '创意效果分析 + 制作入口。',
+    cta: '去做素材',
+    hooksTitle: '创意 Hook A/B/C · CTR 对比',
+    hooks: [
+      { id: 'A', ctr: '3.1%', text: 'She never expected to fall for someone like him. After years of playing it safe…', imp: '12.4K', spend: '$14.20' },
+      { id: 'B', ctr: '2.7%', text: 'One night changed everything. In a city that never sleeps, their worlds collided…', imp: '10.8K', spend: '$12.60' },
+      { id: 'C', ctr: '2.4%', text: 'The last thing she wanted was to feel again. But fate had other plans when…', imp: '9.2K', spend: '$11.30' },
+    ],
+    checkTitle: '创意检查清单 · Crimson Tides',
+    checks: [
+      { k: 'Word count', v: '512w', ok: true },
+      { k: 'Lang', v: 'EN', ok: true },
+      { k: 'CTR forecast', v: '3.1%', ok: true },
+      { k: 'Tone', v: 'Romantic', ok: true },
+      { k: 'CTA present', v: 'Yes', ok: true },
+      { k: 'Compliance', v: 'Passed', ok: true },
+    ],
+    topTitle: '创意 Top · 按花费',
+    topRows: [],
+  },
+  reconcile: [
+    { label: '收入对账差 (DB VS STRIPE)', value: '0.0%', cls: 'good', tag: 'webhook 健康' },
+    { label: 'DB 付费数 (UIDS)', value: '—', tag: 'Stripe 条数待补源' },
+    { label: 'BEACON GAP (CF VS DB)', value: '0.0%', cls: 'good', tag: 'data-gap $1' },
+    { label: '真实 ROAS (REV/SPEND)', value: '0.000×', cls: 'crit' },
   ],
 };
 
@@ -162,6 +217,12 @@ const mindramas: Product = {
   rules: [
     { name: 'Meta 开投前置检查', cond: 'token 就绪 且 近30天花费=0', act: '提示开投', on: true },
     { name: '付费墙埋点校验', cond: 'paywall_view < 订阅弹窗', act: '触发数据告警', on: true },
+  ],
+  reconcile: [
+    { label: '收入对账差 (DB VS STRIPE)', value: '—', tag: '待开投' },
+    { label: 'DB 付费数 (UIDS)', value: '0', cls: 'warn', tag: '埋点待核' },
+    { label: 'BEACON GAP (GA4 VS DB)', value: '—', tag: '近7天0支付' },
+    { label: '真实 ROAS (REV/SPEND)', value: '—' },
   ],
 };
 
@@ -215,9 +276,123 @@ const kwai: Product = {
     { name: '低 ROI 观察', cond: 'ROI < 1.8 连续 2 天', act: '转观察 / 换创意', on: true },
     { name: '高 ROI 放量', cond: 'ROI ≥ 2.2', act: '预算 +30%', on: true },
   ],
+  reconcile: [
+    { label: '收入对账差 (DB VS STRIPE)', value: '0.0%', cls: 'good', tag: 'webhook 健康' },
+    { label: 'DB 付费数 (UIDS)', value: '—', tag: 'Stripe 条数待补源' },
+    { label: 'BEACON GAP (CF VS DB)', value: '0.0%', cls: 'good', tag: 'data-gap $1' },
+    { label: '真实 ROAS (REV/SPEND)', value: '0.000×', cls: 'crit' },
+  ],
 };
 
-export const PRODUCTS: Product[] = [drama, mindramas, kwai];
+// ── Auvora（海外电商 DTC 护肤） — Meta + TikTok + Shopify ──
+const ecom: Product = {
+  id: 'auvora', label: '海外电商 · Auvora DTC', tenant: 'auvora-dtc', tz: 'PST', accts: 4,
+  kpiSrc: 'META + TIKTOK + SHOPIFY · 真实 @ 2026-06-23 18:20 · 同比昨日',
+  contentZh: '商品', playLabel: '复购%', funnelSrc: '展示→点击→商详→加购→支付',
+  kpis: [
+    { l: '今日花费', v: '$4,820', d: '▲ 12.0%', dcls: 'up' },
+    { l: 'D0 ROAS', v: '2.85×', cls: 'good', d: '▲ 8.0%', dcls: 'up' },
+    { l: '客单价 AOV', v: '$52.40', d: '▲ 3.2%', dcls: 'up' },
+    { l: 'CTR', v: '1.92%', d: '▲ 0.2%', dcls: 'up' },
+    { l: 'CPC', v: '$0.74', d: '▼ 6.0%', dcls: 'up' },
+    { l: '转化率 CVR', v: '2.41%', d: '▲ 0.4%', dcls: 'up' },
+    { l: 'CPA 获客成本', v: '$18.90', d: '▼ 5.0%', dcls: 'up' },
+    { l: '加购率 ATC', v: '8.6%', cls: 'good' },
+  ],
+  funnel: [
+    { step: '①', label: '广告展示 (Impr.)', value: 1240000, drop: null, kind: '' },
+    { step: '②', label: '独立触达 (Reach)', value: 820000, drop: -33.9, kind: '' },
+    { step: '③', label: '链接点击 (Link Click)', value: 23600, drop: -97.1, kind: '' },
+    { step: '④', label: '落地页浏览 (LPV)', value: 19400, drop: -17.8, kind: '' },
+    { step: '⑤', label: '商品详情页 (ViewContent)', value: 14200, drop: -26.8, kind: '' },
+    { step: '⑥', label: '加入购物车 (AddToCart)', value: 4180, drop: -70.6, kind: '', abn: true },
+    { step: '⑦', label: '发起结账 (InitiateCheckout)', value: 2240, drop: -46.4, kind: '' },
+    { step: '⑧', label: '添加支付 (AddPaymentInfo)', value: 1560, drop: -30.4, kind: '' },
+    { step: '⑨', label: '购买 (Purchase)', value: 1180, drop: -24.4, kind: '' },
+  ],
+  geo: [
+    { c: 'US', label: 'United States', spend: 2100, churn: 0, roas: 3.1, paid: 560 },
+    { c: 'GB', label: 'Great Britain', spend: 760, churn: 0, roas: 2.6, paid: 190 },
+    { c: 'DE', label: 'Germany', spend: 640, churn: 0, roas: 2.4, paid: 150 },
+    { c: 'AU', label: 'Australia', spend: 520, churn: 0, roas: 2.9, paid: 140 },
+    { c: 'CA', label: 'Canada', spend: 480, churn: 0, roas: 2.7, paid: 130 },
+  ],
+  series: [
+    { t: 'Glow Serum 30ml', sess: 3200, play: 22, paid: 168, roas: 3.2, st: 'good' },
+    { t: 'Starter Kit (3-pc)', sess: 2100, play: 26, paid: 96, roas: 2.9, st: 'good' },
+    { t: 'Night Repair Cream', sess: 2400, play: 18, paid: 122, roas: 2.6, st: 'good' },
+    { t: 'Vitamin C Bundle', sess: 1900, play: 15, paid: 88, roas: 2.2, st: 'warn' },
+    { t: 'Hydra Mist 100ml', sess: 1500, play: 12, paid: 64, roas: 1.7, st: 'warn' },
+  ],
+  plans: [
+    { camp: 'Prospecting_US_Glow-Serum_Advantage+', spend: 1200, imp: 312000, clicks: 7500, ctr: 2.4, cpm: 3.85, roi: 3.2, st: '放量', cid: 'e1' },
+    { camp: 'Retargeting_US_ATC-7d', spend: 640, imp: 98000, clicks: 3100, ctr: 3.2, cpm: 6.53, roi: 4.6, st: '放量', cid: 'e2' },
+    { camp: 'Prospecting_EU_Bundle', spend: 720, imp: 198000, clicks: 3200, ctr: 1.6, cpm: 3.64, roi: 1.7, st: '观察', cid: 'e3' },
+    { camp: 'TikTok_US_UGC_Spark', spend: 560, imp: 240000, clicks: 3800, ctr: 1.6, cpm: 2.33, roi: 2.2, st: '观察', cid: 'e4' },
+    { camp: 'Prospecting_AU_Lookalike', spend: 480, imp: 132000, clicks: 2100, ctr: 1.6, cpm: 3.64, roi: 2.9, st: '放量', cid: 'e5' },
+  ],
+  accounts: [
+    { plat: 'META', name: 'Auvora US BM', aid: 'act_55xx…3140', kind: '渠道', st: 'ok', stx: '已授权', bal: '$12,400', sync: '2 min ago', meta: '真实' },
+    { plat: 'TIKTOK', name: 'Auvora TikTok Ads', aid: 'tt_77xx…9021', kind: '渠道', st: 'ok', stx: '已授权', bal: '$4,800', sync: '3 min ago', meta: '真实' },
+    { plat: 'SHOPIFY', name: 'auvora.com', aid: '', kind: '独立站', st: 'ok', stx: '已授权', bal: '—', sync: '1 min ago', meta: 'GMV/订单' },
+    { plat: 'STRIPE', name: '支付·Stripe', aid: '', kind: '支付', st: 'ok', stx: '已授权', bal: '—', sync: '5 min ago', meta: '结算' },
+  ],
+  research: [
+    { t: 'DTC 护肤 Q2 投放基准', meta: 'market research · 2026-06-15', src: 'ingest', desc: '北美 DTC 护肤 Meta CPM $3-5、CTR 1.5-2.5%、首单 ROAS 2-3× 为对齐区间；UGC 素材 CTR 普遍高出制作片 30-50%。' },
+    { t: 'Hims/Ro 落地页拆解', meta: 'competitor · 2026-06-12', src: 'competitor', desc: '竞品落地页前屏 = 痛点+权威背书+限时优惠；结账压缩到 2 步，加购→支付转化高出我方约 12pt。' },
+    { t: 'AOV 提升：套装与满赠', meta: 'insight · 2026-06-09', src: 'insight', desc: '套装 SKU 客单价高约 35%；满 $60 免运提升加购率，建议默认勾选 3 件套。' },
+  ],
+  alerts: [
+    { lv: 'crit', t: '加购→支付链路流失偏高', d: '商详→加购 (-70.6%)、加购→结账 (-46.4%) 两段流失高于行业基准，疑似落地页/结账体验问题，建议优先排查。', time: '18:20' },
+    { lv: 'warn', t: 'EU 市场 ROAS 低于阈值', d: 'Prospecting_EU_Bundle ROI 1.7× 低于 2.0 目标，建议收缩预算或更换本地化素材。', time: '18:20' },
+  ],
+  thresholds: [['stage', '放量', 'BRIEF'], ['roas 目标', '2.0', 'BRIEF'], ['ctr_target', '0.018', 'BRIEF'], ['cpa 上限', '$25', 'BRIEF']],
+  rules: [
+    { name: '低 ROAS 关停', cond: 'D0 ROAS < 1.5 且花费 > $100', act: '暂停 ad set', on: true },
+    { name: '高 ROAS 放量', cond: 'D0 ROAS ≥ 3.0 连续 2 天', act: '预算 +20%', on: true },
+    { name: '加购再营销', cond: '7 日内加购未支付', act: '自动进再营销受众', on: true },
+    { name: 'ATC 异常告警', cond: '加购→支付转化 < 行业基准', act: '触发体验排查', on: false },
+  ],
+  creative: {
+    intro: '创意效果分析 + UGC 制作入口。',
+    cta: '去做素材',
+    hooksTitle: '创意 Hook A/B/C · CTR 对比',
+    hooks: [
+      { id: 'A', ctr: '2.4%', text: 'Dermatologists are calling it the 2-week glow. Here’s why thousands switched to…', imp: '84.0K', spend: '$312' },
+      { id: 'B', ctr: '1.9%', text: 'I stopped wasting money on 7 serums. This one bottle replaced my whole shelf…', imp: '96.0K', spend: '$358' },
+      { id: 'C', ctr: '1.6%', text: 'Your 5-minute morning routine, simplified. Clinically tested, cruelty-free, and…', imp: '72.0K', spend: '$268' },
+    ],
+    checkTitle: '创意检查清单 · Auvora Glow Serum',
+    checks: [
+      { k: 'Aspect ratio', v: '9:16', ok: true },
+      { k: 'Lang', v: 'EN', ok: true },
+      { k: 'CTR forecast', v: '2.4%', ok: true },
+      { k: 'Hook type', v: 'UGC', ok: true },
+      { k: 'Offer present', v: '20% OFF', ok: true },
+      { k: 'Compliance', v: 'Passed', ok: true },
+    ],
+    topTitle: '创意 Top · 按花费',
+    topRows: [
+      { name: 'Glow Serum_UGC_A', acct: 'Meta_US_01', spend: '$640', imp: '312K', clicks: '7.5K', cpm: '$2.05', cpc: '$0.85', ctr: '2.4%', play3s: '41%', complete: '18%', paid: '168', roi: '3.2×', st: '放量' },
+      { name: 'Night Repair_Demo_B', acct: 'Meta_US_01', spend: '$520', imp: '268K', clicks: '5.1K', cpm: '$1.94', cpc: '$1.02', ctr: '1.9%', play3s: '36%', complete: '14%', paid: '122', roi: '2.6×', st: '观察' },
+      { name: 'Bundle_Carousel_C', acct: 'TikTok_US', spend: '$410', imp: '240K', clicks: '3.8K', cpm: '$1.71', cpc: '$1.08', ctr: '1.6%', play3s: '30%', complete: '11%', paid: '88', roi: '2.2×', st: '观察' },
+      { name: 'Vitamin C_Hook_D', acct: 'Meta_EU', spend: '$360', imp: '198K', clicks: '3.2K', cpm: '$1.82', cpc: '$1.13', ctr: '1.6%', play3s: '28%', complete: '9%', paid: '64', roi: '1.7×', st: '警戒' },
+    ],
+  },
+  reconcile: [
+    { label: '收入对账差 (SHOPIFY VS STRIPE)', value: '0.3%', cls: 'good', tag: 'webhook 健康' },
+    { label: '订单数 (Orders)', value: '1,180', tag: '四源对齐' },
+    { label: 'PIXEL GAP (CAPI VS PIXEL)', value: '1.2%', cls: 'warn', tag: 'data-gap $0' },
+    { label: '真实 ROAS (REV/SPEND)', value: '2.85×', cls: 'good' },
+  ],
+  breakdowns: [
+    { title: '版位 Placement', rows: [{ k: 'Feed', v: '42%', pct: 42 }, { k: 'Reels', v: '31%', pct: 31 }, { k: 'Stories', v: '18%', pct: 18 }, { k: 'Search', v: '9%', pct: 9 }] },
+    { title: '设备 Device', rows: [{ k: 'iOS', v: '64%', pct: 64 }, { k: 'Android', v: '33%', pct: 33 }, { k: 'Web', v: '3%', pct: 3 }] },
+    { title: '受众 Audience', rows: [{ k: 'Lookalike 1%', v: '48%', pct: 48 }, { k: 'Interest', v: '34%', pct: 34 }, { k: 'Retargeting', v: '18%', pct: 18 }] },
+  ],
+};
+
+export const PRODUCTS: Product[] = [drama, mindramas, ecom, kwai];
 
 // ── anomaly cards derived from a product's funnel (biggest drops / abnormal nodes) ──
 export interface Anomaly { pct: string; from: string; to: string; people: string; lv: 'crit' | 'warn'; }
