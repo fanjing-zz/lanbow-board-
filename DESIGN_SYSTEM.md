@@ -120,6 +120,26 @@ Single source `R` (exported from `theme2.ts`, imported wherever radii are needed
 | `lbSlide` | `.3s`, translateX 24→0 | companion panel enter |
 | bar grow | `width .55s cubic-bezier(.2,.7,.2,1)` | funnel/geo bars |
 
+### 2.8 Z‑index & stacking（层级规范 — 强制）
+所有层级只用 `theme2.ts` 的 **`Z` 单一来源**，禁止写裸数字（散落的魔法数字正是"层级混乱"的根因）。
+
+1. **App 根必须 `isolation: isolate`**（+ `position:relative`）。这样整个应用形成**一个独立 stacking context**：内部所有 `position:fixed` 层（对话面板 / 输入坞 / loader / 下拉）都被收在这个上下文里，被嵌入 / 调用到别的页面时**不会与宿主页面的 z‑index 互相穿插打架**。这是"直接调用出现层级混乱"的根治点。
+2. **层级刻度（数值越大越靠上，= 绘制顺序）：**
+
+| `Z.*` | 值 | 层 |
+|---|---|---|
+| `base` | 0 | 画布 / 主滚动内容 |
+| `chrome` | 20 | 固定顶栏 + 侧栏 |
+| `fade` | 30 | 底部内容渐隐（在输入坞之下） |
+| `dock` | 40 | 居中输入坞 |
+| `companion` | 45 | AI 对话面板（覆盖内容） |
+| `loader` | 48 | 全区 loading 遮罩 |
+| `scrim` | 49 | popover 的点击关闭背板 |
+| `popover` | 50 | 筛选下拉 / 菜单 |
+| `tooltip` | 60 | hover 提示 —— 永远最上 |
+
+3. 规则：① 顶栏/侧栏永远是 `chrome`；② 覆盖型浮层 ≥ `companion`；③ 每个 popover 配一个 `scrim`（DOM 里 scrim 在前、面板在后）；④ tooltip 恒为最高。新增层级在此表插值，不要复用同值（除 scrim/popover 这类成对关系）。
+
 ---
 
 ## 3. Layout

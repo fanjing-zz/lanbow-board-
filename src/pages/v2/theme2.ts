@@ -142,3 +142,19 @@ export const c = {
 
 // ── radius scale (single source) — strict to Figma 3097-11961 (sharp/technical) ──
 export const R = { card: 2, nav: 4, ctrl: 6, chip: 4, badge: 4, bar: 3, pill: 6 };
+
+// ── z-index scale (single source) ──────────────────────────────────────────────
+// The app root sets `isolation:isolate` → these values live in ONE stacking context,
+// so nothing leaks/fights a host page when embedded. Only ever layer with `Z.*`,
+// never a raw number. Order = paint order (higher = on top).
+export const Z = {
+  base: 0,        // canvas / main scroll content
+  chrome: 20,     // fixed topbar + sidebar
+  fade: 30,       // bottom content fade (behind the input dock)
+  dock: 40,       // centered input dock
+  companion: 45,  // AI chat panel (overlays content)
+  loader: 48,     // full-area loading overlay
+  scrim: 49,      // click-away backdrop under a popover
+  popover: 50,    // filter dropdown / menus
+  tooltip: 60,    // hover tooltips — always topmost
+};

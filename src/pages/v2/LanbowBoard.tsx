@@ -1,5 +1,5 @@
 import React from 'react';
-import { c, applyTheme, R } from './theme2';
+import { c, applyTheme, R, Z } from './theme2';
 import {
   PRODUCTS, TENANTS, NAV, ASSET_HEALTH, SUGGESTIONS, anomalies,
   Product, Kpi, FunnelNode, CreativeTopRow, EpisodePoint, Ttff, ReconcileItem, BreakdownGroup,
@@ -300,6 +300,7 @@ export function LanbowBoard() {
   return (
     <ModContext.Provider value={modCtx}>
     <div style={{ display: 'grid', gridTemplateColumns: '60px 1fr', gridTemplateRows: '56px 1fr', height: '100vh', overflow: 'hidden',
+      position: 'relative', isolation: 'isolate',  // own stacking context → internal z-index never leaks/fights a host page
       background: `radial-gradient(1100px 420px at 78% -12%, ${c.accentDim}, transparent 62%), ${c.bgBase}`, color: c.textPri, fontFamily: c.sans, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>
       <style>{`
         .lb-main::-webkit-scrollbar{width:8px}.lb-main::-webkit-scrollbar-thumb{background:var(--c-border-strong);border-radius:4px}.lb-main::-webkit-scrollbar-track{background:transparent}
@@ -323,7 +324,7 @@ export function LanbowBoard() {
       `}</style>
 
       {/* ── Sidebar ── */}
-      <nav style={{ gridColumn: 1, gridRow: 2, background: 'transparent', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '14px 0', gap: 6, zIndex: 20 }}>
+      <nav style={{ gridColumn: 1, gridRow: 2, background: 'transparent', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '14px 0', gap: 6, zIndex: Z.chrome }}>
         {navItems.map((n, i) => {
           const on = n.id === 'chat' ? chatOpen : n.id === cur, prevGrp = i > 0 ? navItems[i - 1].grp : n.grp;
           const Ico = ICON[n.id] || ICON.overview;
@@ -334,7 +335,7 @@ export function LanbowBoard() {
                 style={{ width: 42, height: 42, borderRadius: R.nav, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', background: on ? c.accentDim : 'transparent', color: on ? c.accent : c.textSec }}>
                 <Ico size={20} />
                 {n.id === 'alerts' && product.alerts.length > 0 && <span style={{ position: 'absolute', top: 6, right: 6, width: 5, height: 5, borderRadius: '50%', background: WARN }} />}
-                {hovNav === n.id && <span style={{ position: 'absolute', left: 50, whiteSpace: 'nowrap', background: c.bgElevated, border: `1px solid ${c.borderStrong}`, color: c.textPri, padding: '4px 10px', borderRadius: R.ctrl, fontSize: 11, zIndex: 50, boxShadow: `0 6px 20px ${c.shadowColor}` }}>{n.label} · {n.en}{!n.ext ? ' · 内部' : ''}</span>}
+                {hovNav === n.id && <span style={{ position: 'absolute', left: 50, whiteSpace: 'nowrap', background: c.bgElevated, border: `1px solid ${c.borderStrong}`, color: c.textPri, padding: '4px 10px', borderRadius: R.ctrl, fontSize: 11, zIndex: Z.tooltip, boxShadow: `0 6px 20px ${c.shadowColor}` }}>{n.label} · {n.en}{!n.ext ? ' · 内部' : ''}</span>}
               </button>
             </React.Fragment>
           );
@@ -342,7 +343,7 @@ export function LanbowBoard() {
       </nav>
 
       {/* ── Topbar ── */}
-      <header style={{ gridColumn: '1 / 3', gridRow: 1, background: 'transparent', display: 'flex', alignItems: 'center', padding: '0 22px', gap: 14, zIndex: 20 }}>
+      <header style={{ gridColumn: '1 / 3', gridRow: 1, background: 'transparent', display: 'flex', alignItems: 'center', padding: '0 22px', gap: 14, zIndex: Z.chrome }}>
         <img src={isDark ? '/lanbow-logo-light.png' : '/lanbow-logo-dark.png'} alt="LANBOW" style={{ height: 16, width: 'auto', display: 'block', flexShrink: 0 }} />
         {!narrow && <span style={{ fontFamily: c.sans, fontSize: 10.5, color: c.textSec, letterSpacing: '0.05em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0, flexShrink: 1 }}>Growth Decision System · v1.2</span>}
         <div style={{ flex: 1, minWidth: 8 }} />
@@ -354,8 +355,8 @@ export function LanbowBoard() {
               <span style={{ fontFamily: c.mono, fontSize: 11, fontWeight: 600, color: c.textPri, maxWidth: 90, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{product.label}</span>
             </button>
             {filtersOpen && <>
-              <div onClick={() => setFiltersOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 49 }} />
-              <div className="lb-pane" style={{ position: 'absolute', top: 38, right: 0, zIndex: 50, width: 256, padding: 14, borderRadius: R.ctrl, background: c.bgElevated, border: `1px solid ${c.borderStrong}`, boxShadow: `0 12px 40px ${c.shadowColor}`, backdropFilter: 'blur(20px)', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div onClick={() => setFiltersOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: Z.scrim }} />
+              <div className="lb-pane" style={{ position: 'absolute', top: 38, right: 0, zIndex: Z.popover, width: 256, padding: 14, borderRadius: R.ctrl, background: c.bgElevated, border: `1px solid ${c.borderStrong}`, boxShadow: `0 12px 40px ${c.shadowColor}`, backdropFilter: 'blur(20px)', display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {FILTERS.map(([label, , full]) => (
                   <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                     <span style={fltL}>{label}</span>
@@ -388,9 +389,9 @@ export function LanbowBoard() {
 
       {/* ── Centered input bar (entry point, when companion panel is closed) ── */}
       {!chatOpen && <>
-        <div style={{ position: 'fixed', left: 60, right: 0, bottom: 0, height: 170, zIndex: 30, pointerEvents: 'none',
+        <div style={{ position: 'fixed', left: 60, right: 0, bottom: 0, height: 170, zIndex: Z.fade, pointerEvents: 'none',
           background: `linear-gradient(to top, ${c.bgBase} 0%, ${c.bgBase} 40%, transparent 100%)` }} />
-        <div className="lbn" style={{ position: 'fixed', left: 'calc(60px + (100vw - 60px)/2)', transform: 'translateX(-50%)', bottom: 40, width: 'min(984px, calc(100vw - 120px))', zIndex: 40 }}>
+        <div className="lbn" style={{ position: 'fixed', left: 'calc(60px + (100vw - 60px)/2)', transform: 'translateX(-50%)', bottom: 40, width: 'min(984px, calc(100vw - 120px))', zIndex: Z.dock }}>
           {modChips}
           {inputBar}
         </div>
@@ -398,7 +399,7 @@ export function LanbowBoard() {
 
       {/* ── AI Companion panel (right, gradient) — shown when conversation is open ── */}
       {chatOpen && (
-        <aside className="lb-companion" style={{ position: 'fixed', top: 56, right: 0, bottom: 0, width: 'min(94vw, 680px, max(440px, 46vw))', zIndex: 45,
+        <aside className="lb-companion" style={{ position: 'fixed', top: 56, right: 0, bottom: 0, width: 'min(94vw, 680px, max(440px, 46vw))', zIndex: Z.companion,
           display: 'flex', flexDirection: 'column', paddingLeft: 'clamp(150px, 15vw, 226px)',
           // single, width-proportional ease-in fade (mask %) — wider & smoother on large screens, never abrupt on small
           background: `radial-gradient(700px 440px at 96% -8%, ${c.accentDim}, transparent 60%), ${c.bgPanel}`,

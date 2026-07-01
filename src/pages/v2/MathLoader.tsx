@@ -1,5 +1,5 @@
 import React from 'react';
-import { c } from './theme2';
+import { c, Z } from './theme2';
 
 // Rose-curve particle "thinking" loader.
 // Ported from github.com/Paidax01/math-curve-loaders (original.js) — themed via currentColor.
@@ -49,7 +49,7 @@ export function MathLoader({ size = 44, color }: { size?: number; color?: string
 // Full-area loading overlay (frosted) — used while data is "fetching".
 export function LoaderOverlay({ label = '加载中…' }: { label?: string }) {
   return (
-    <div style={{ position: 'fixed', left: 60, top: 56, right: 0, bottom: 0, zIndex: 48, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16,
+    <div style={{ position: 'fixed', left: 60, top: 56, right: 0, bottom: 0, zIndex: Z.loader, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16,
       background: c.bgBase + '66', backdropFilter: 'blur(3px)', WebkitBackdropFilter: 'blur(3px)' }}>
       <MathLoader size={64} />
       <span style={{ fontFamily: c.mono, fontSize: 11, color: c.textMute, textTransform: 'uppercase', letterSpacing: '0.14em' }}>{label}</span>
