@@ -401,8 +401,9 @@ export function LanbowBoard() {
       {chatOpen && (
         <aside className="lb-companion" style={{ position: 'fixed', top: 56, right: 0, bottom: 0, width: 'min(94vw, 680px, max(440px, 46vw))', zIndex: Z.companion,
           display: 'flex', flexDirection: 'column', paddingLeft: 'clamp(150px, 15vw, 226px)',
-          // single, width-proportional ease-in fade (mask %) — wider & smoother on large screens, never abrupt on small
-          background: `radial-gradient(700px 440px at 96% -8%, ${c.accentDim}, transparent 60%), ${c.bgPanel}`,
+          // OPAQUE content floor (bgBase) under the panel tint → dashboard never bleeds through the reading area.
+          // The left mask (below) still fades the edge into the canvas, so the blend stays; only the content zone is solid.
+          background: `radial-gradient(700px 440px at 96% -8%, ${c.accentDim}, transparent 60%), linear-gradient(0deg, ${c.bgPanel}, ${c.bgPanel}), ${c.bgBase}`,
           backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)',
           WebkitMaskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.16) 12%, rgba(0,0,0,0.72) 24%, #000 33%)', maskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.16) 12%, rgba(0,0,0,0.72) 24%, #000 33%)' }}>
           {/* header */}

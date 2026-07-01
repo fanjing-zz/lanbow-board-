@@ -160,10 +160,13 @@ grid-template-rows:    56px 1fr;
 
 - **Bottom content fade** (when centered input shown): fixed strip, `linear-gradient(to top, bgBase 0%, bgBase 40%, transparent)` so content dissolves before the input.
 - **AI Companion blend** (overlay): the panel does **not** push content; it overlays and blends via a **right‑to‑left fade**. The fade must be **width‑proportional**, not fixed‑px, so it scales naturally across screens (rule below):
-  - background = solid `bgPanel` + radial accent glow (`radial-gradient(700px 440px at 96% -8%, accentDim, transparent 60%)`). **Do not** stack a second horizontal `linear-gradient` here — one fade ramp only (the mask), never two multiplying.
-  - `mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,.16) 12%, rgba(0,0,0,.72) 24%, #000 33%)` — a 4‑stop **ease‑in** in **%** (fades the frosted blur with the color). Because stops are `%`, the fade widens on large screens and stays gentle on small.
-  - content offset `padding-left: clamp(150px, 15vw, 226px)` so text always lands in the opaque zone (tracks the fade).
+  - **Opaque content floor (mandatory — see §3.3):** `radial(accent glow), linear-gradient(bgPanel,bgPanel), bgBase`. The `bgBase` layer makes the reading area **fully opaque** so the dashboard never bleeds through the message text. **Never** back a text overlay with only a translucent color + `backdrop-blur` — content behind will show through and collide.
+  - `mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,.16) 12%, rgba(0,0,0,.72) 24%, #000 33%)` — a 4‑stop **ease‑in** in **%**. The mask fades the *edge* (opaque floor included) into the canvas, so the blend is preserved while the content zone stays solid. Because stops are `%`, the fade widens on large screens and stays gentle on small.
+  - content offset `padding-left: clamp(150px, 15vw, 226px)` so text always lands past the fade, in the opaque zone.
   - **Why mask‑% over fixed‑px:** fixed px (old `150px`/`130px`) looked too narrow/abrupt on wide screens and read as a hard edge in light mode; a single proportional ease‑in blends smoothly in both themes.
+
+### 3.3 Overlay opacity（浮层不透明度 — 强制）
+Any overlay that carries **readable text** (companion panel, popover, tooltip, loader label, dropdown) must sit on an **opaque (or ≥ ~0.97) background floor** — compose `…tint…, bgBase/bgCard` so nothing behind shows through the text. `backdrop-filter: blur` and translucent tints are **decoration only** (frosted edge, scrims), never the sole backing of a text surface. Reserve real transparency for **non‑text** layers: edge‑fades (via mask), click‑away scrims, and the seamless topbar/sidebar. This is the rule that prevents "content bleeding through the panel / 层级混乱".
 
 ---
 

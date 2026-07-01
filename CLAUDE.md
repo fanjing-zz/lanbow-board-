@@ -116,6 +116,7 @@ fontVariantNumeric: 'tabular-nums'
 
 - **圆角一律用 `R.*`（见 §2.4 / DESIGN_SYSTEM §2.4），禁止写死数字**：卡片 `R.card`、控件/输入 `R.ctrl`、badge/chip `R.badge`/`R.chip`、bar `R.bar`。复合值用模板串：`` `0 ${R.bar}px ${R.bar}px 0` ``。
 - **层级一律用 `Z.*`（theme2.ts / DESIGN_SYSTEM §2.8），禁止写裸 zIndex**。App 根已设 `isolation:isolate` 形成独立 stacking context —— 内部浮层不会与被嵌入的宿主页面 z-index 打架（修「直接调用层级混乱」）。顺序：`chrome < fade < dock < companion < loader < scrim < popover < tooltip`。
+- **承载文字的浮层必须有不透明背景垫底（DESIGN_SYSTEM §3.3）**：组合 `…tint…, bgBase/bgCard`，别只用「半透明色 + backdrop-blur」当文字面板背景，否则背后内容会透出来和文字打架。透明只留给非文字层（边缘渐隐 mask、点击背板、无缝顶栏/侧栏）。
 
 | 用途 | 值 |
 |---|---|
